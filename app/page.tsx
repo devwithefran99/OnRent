@@ -1,19 +1,19 @@
-import { Button } from "@/components/ui/button"
+import Categories from "@/components/home/Categories";
+import CustomerReviews from "@/components/home/customer-reviews";
+import FeaturedEquipment from "@/components/home/FeaturedEquipment";
+import Hero from "@/components/home/Hero";
+import WhyChooseUs from "@/components/home/why-us";
+
+
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+     <main>
+      <Hero />
+       <FeaturedEquipment />
+       <Categories />
+       <WhyChooseUs />
+       <CustomerReviews />
+    </main>
   )
 }
