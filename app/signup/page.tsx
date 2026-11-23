@@ -2,6 +2,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -11,11 +13,107 @@ import {
   ShieldCheck,
   UserRound,
   BriefcaseBusiness,
-  CheckCircle2,
   KeyRound,
+  Image as ImageIcon,
+  Check,
+  X,
 } from "lucide-react";
+import { FaGoogle } from "react-icons/fa6";
+import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
+import {
+  getPasswordChecks,
+  getPasswordError,
+  isValidImageUrl,
+} from "@/lib/validation";
+
+type Role = "customer" | "owner";
+
+type SignUpForm = {
+  name: string;
+  email: string;
+  image: string;
+  password: string;
+  confirmPassword: string;
+  role: Role;
+};
 
 export default function SignUpPage() {
+  const router = useRouter();
+
+  const [form, setForm] = useState<SignUpForm>({
+    name: "",
+    email: "",
+    image: "",
+    password: "",
+    confirmPassword: "",
+    role: "customer",
+  });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const passwordChecks = getPasswordChecks(form.password);
+
+  const updateField =
+    (field: keyof SignUpForm) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setForm((current) => ({ ...current, [field]: event.target.value }));
+    };
+
+  const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!form.name.trim()) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+
+    if (!isValidImageUrl(form.image)) {
+      toast.error("Please paste a valid photo link (starting with http).");
+      return;
+    }
+
+    const passwordError = getPasswordError(form.password);
+    if (passwordError) {
+      toast.error(passwordError);
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    if (!acceptedTerms) {
+      toast.error("Please accept the Terms & Conditions and Privacy Policy.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error: signUpError } = await authClient.signUp.email({
+      name: form.name.trim(),
+      email: form.email.trim(),
+      image: form.image.trim(),
+      password: form.password,
+      role: form.role,
+    });
+
+    if (signUpError) {
+      setLoading(false);
+      toast.error(signUpError.message ?? "Could not create your account.");
+      return;
+    }
+
+    toast.success("Account created successfully! Welcome to OnRent.");
+    router.push("/dashboard");
+    router.refresh();
+  };
+
+  const handleGoogleSignUp = () => {
+    toast.info("Google sign-up will be available soon.");
+  };
+
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto flex min-h-screen max-w-[1600px] items-center justify-center p-4 sm:p-6 lg:p-10">
@@ -124,7 +222,27 @@ export default function SignUpPage() {
                 </p>
               </div>
 
-              <form className="mt-8 space-y-5">
+              {/* Google (UI only for now) */}
+              <div className="mt-7">
+                <button
+                  type="button"
+                  onClick={handleGoogleSignUp}
+                  className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <FaGoogle size={18} className="text-[#EA4335]" />
+                  Continue with Google
+                </button>
+
+                <div className="my-5 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-slate-200" />
+                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                    or sign up with email
+                  </span>
+                  <span className="h-px flex-1 bg-slate-200" />
+                </div>
+              </div>
+
+              <form className="space-y-5" onSubmit={handleSignUp} noValidate>
                 {/* Full Name */}
                 <div>
                   <label
@@ -142,7 +260,12 @@ export default function SignUpPage() {
 
                     <input
                       id="name"
+                      name="name"
                       type="text"
+                      value={form.name}
+                      onChange={updateField("name")}
+                      autoComplete="name"
+                      required
                       placeholder="Enter your full name"
                       className="h-13 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
                     />
@@ -166,11 +289,48 @@ export default function SignUpPage() {
 
                     <input
                       id="email"
+                      name="email"
                       type="email"
+                      value={form.email}
+                      onChange={updateField("email")}
+                      autoComplete="email"
+                      required
                       placeholder="you@example.com"
                       className="h-13 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
                     />
                   </div>
+                </div>
+
+                {/* Photo URL */}
+                <div>
+                  <label
+                    htmlFor="image"
+                    className="mb-2 block text-sm font-semibold text-slate-700"
+                  >
+                    Photo URL
+                  </label>
+
+                  <div className="relative">
+                    <ImageIcon
+                      size={19}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+
+                    <input
+                      id="image"
+                      name="image"
+                      type="url"
+                      value={form.image}
+                      onChange={updateField("image")}
+                      required
+                      placeholder="https://example.com/your-photo.jpg"
+                      className="h-13 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+                    />
+                  </div>
+
+                  <p className="mt-1.5 text-xs text-slate-400">
+                    Paste a direct image link (imgbb or any public image URL).
+                  </p>
                 </div>
 
                 {/* Account Type */}
@@ -185,7 +345,10 @@ export default function SignUpPage() {
                         type="radio"
                         name="role"
                         value="customer"
-                        defaultChecked
+                        checked={form.role === "customer"}
+                        onChange={() =>
+                          setForm((current) => ({ ...current, role: "customer" }))
+                        }
                         className="peer sr-only"
                       />
 
@@ -205,6 +368,10 @@ export default function SignUpPage() {
                         type="radio"
                         name="role"
                         value="owner"
+                        checked={form.role === "owner"}
+                        onChange={() =>
+                          setForm((current) => ({ ...current, role: "owner" }))
+                        }
                         className="peer sr-only"
                       />
 
@@ -238,11 +405,46 @@ export default function SignUpPage() {
 
                     <input
                       id="password"
+                      name="password"
                       type="password"
+                      value={form.password}
+                      onChange={updateField("password")}
+                      autoComplete="new-password"
+                      required
+                      minLength={6}
                       placeholder="Create a password"
                       className="h-13 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
                     />
                   </div>
+
+                  <ul className="mt-2 space-y-1 text-xs">
+                    {[
+                      {
+                        ok: passwordChecks.minLength,
+                        label: "At least 6 characters",
+                      },
+                      {
+                        ok: passwordChecks.hasUppercase,
+                        label: "One uppercase letter (A-Z)",
+                      },
+                      {
+                        ok: passwordChecks.hasLowercase,
+                        label: "One lowercase letter (a-z)",
+                      },
+                    ].map(({ ok, label }) => (
+                      <li
+                        key={label}
+                        className={
+                          ok
+                            ? "flex items-center gap-1.5 text-emerald-600"
+                            : "flex items-center gap-1.5 text-slate-400"
+                        }
+                      >
+                        {ok ? <Check size={13} /> : <X size={13} />}
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
                 {/* Confirm Password */}
@@ -262,7 +464,13 @@ export default function SignUpPage() {
 
                     <input
                       id="confirmPassword"
+                      name="confirmPassword"
                       type="password"
+                      value={form.confirmPassword}
+                      onChange={updateField("confirmPassword")}
+                      autoComplete="new-password"
+                      required
+                      minLength={6}
                       placeholder="Confirm your password"
                       className="h-13 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
                     />
@@ -273,6 +481,8 @@ export default function SignUpPage() {
                 <label className="flex cursor-pointer items-start gap-2.5">
                   <input
                     type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(event) => setAcceptedTerms(event.target.checked)}
                     className="mt-1 h-4 w-4 shrink-0 rounded border-slate-300 accent-blue-600"
                   />
 
@@ -297,10 +507,11 @@ export default function SignUpPage() {
 
                 {/* Submit */}
                 <button
-                  type="button"
-                  className="group flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-orange-600 hover:shadow-orange-600/20"
+                  type="submit"
+                  disabled={loading}
+                  className="group flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-orange-600 hover:shadow-orange-600/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Create Account
+                  {loading ? "Creating Account…" : "Create Account"}
                   <ArrowRight
                     size={19}
                     className="transition-transform group-hover:translate-x-1"

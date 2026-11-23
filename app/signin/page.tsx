@@ -2,6 +2,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -11,8 +13,49 @@ import {
   CheckCircle2,
   KeyRound,
 } from "lucide-react";
+import { FaGoogle } from "react-icons/fa6";
+import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 export default function SignInPage() {
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!email.trim() || !password) {
+      toast.error("Please enter your email and password.");
+      return;
+    }
+
+    setLoading(true);
+
+    const { error: signInError } = await authClient.signIn.email({
+      email: email.trim(),
+      password,
+      rememberMe,
+    });
+
+    if (signInError) {
+      setLoading(false);
+      toast.error(signInError.message ?? "Invalid email or password.");
+      return;
+    }
+
+    toast.success("Signed in successfully! Welcome back.");
+    router.push("/dashboard");
+    router.refresh();
+  };
+
+  const handleGoogleSignIn = () => {
+    toast.info("Google sign-in will be available soon.");
+  };
+
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="mx-auto flex min-h-screen max-w-[1600px] items-center justify-center p-4 sm:p-6 lg:p-10">
@@ -106,7 +149,27 @@ export default function SignInPage() {
                 </p>
               </div>
 
-              <form className="mt-9 space-y-6">
+              {/* Google (UI only for now) */}
+              <div className="mt-7">
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <FaGoogle size={18} className="text-[#EA4335]" />
+                  Continue with Google
+                </button>
+
+                <div className="my-5 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-slate-200" />
+                  <span className="text-xs font-medium uppercase tracking-wider text-slate-400">
+                    or sign in with email
+                  </span>
+                  <span className="h-px flex-1 bg-slate-200" />
+                </div>
+              </div>
+
+              <form className="space-y-6" onSubmit={handleSignIn} noValidate>
                 {/* Email */}
                 <div>
                   <label
@@ -125,6 +188,11 @@ export default function SignInPage() {
                     <input
                       id="email"
                       type="email"
+                      name="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      autoComplete="email"
+                      required
                       placeholder="you@example.com"
                       className="h-14 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
                     />
@@ -151,6 +219,11 @@ export default function SignInPage() {
                     <input
                       id="password"
                       type="password"
+                      name="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      autoComplete="current-password"
+                      required
                       placeholder="Enter your password"
                       className="h-14 w-full rounded-xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
                     />
@@ -162,6 +235,8 @@ export default function SignInPage() {
                   <label className="flex cursor-pointer items-center gap-2.5">
                     <input
                       type="checkbox"
+                      checked={rememberMe}
+                      onChange={(event) => setRememberMe(event.target.checked)}
                       className="h-4 w-4 rounded border-slate-300 accent-blue-600"
                     />
                     <span className="text-sm text-slate-600">
@@ -177,10 +252,11 @@ export default function SignInPage() {
 
                 {/* Submit Button */}
                 <button
-                  type="button"
-                  className="group flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-orange-600 hover:shadow-orange-600/20"
+                  type="submit"
+                  disabled={loading}
+                  className="group flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-orange-600 hover:shadow-orange-600/20 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Sign In
+                  {loading ? "Signing In…" : "Sign In"}
                   <ArrowRight
                     size={19}
                     className="transition-transform group-hover:translate-x-1"
@@ -191,7 +267,7 @@ export default function SignInPage() {
               {/* Register Link */}
               <div className="mt-8 text-center">
                 <p className="text-sm text-slate-500">
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                   <Link
                     href="/signup"
                     className="font-bold text-blue-600 transition hover:text-orange-600"
