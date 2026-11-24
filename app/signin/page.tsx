@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa6";
 import { toast } from "sonner";
-import { authClient } from "@/lib/auth-client";
+import { authClient, getAccessToken } from "@/lib/auth-client";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -48,6 +48,12 @@ export default function SignInPage() {
     }
 
     toast.success("Signed in successfully! Welcome back.");
+
+    const token = await getAccessToken({ force: true });
+    if (!token) {
+      toast.warning("Signed in, but the API token could not be created.");
+    }
+
     router.push("/dashboard");
     router.refresh();
   };

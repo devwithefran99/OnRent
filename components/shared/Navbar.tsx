@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { authClient, clearAuthToken } from "@/lib/auth-client";
 
 const Navbar = () => {
   const router = useRouter();
@@ -23,6 +23,7 @@ const Navbar = () => {
   const handleSignOut = async () => {
     setSigningOut(true);
     await authClient.signOut();
+    clearAuthToken();
     setIsOpen(false);
     router.push("/");
     router.refresh();

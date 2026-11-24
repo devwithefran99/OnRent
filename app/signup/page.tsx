@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa6";
 import { toast } from "sonner";
-import { authClient } from "@/lib/auth-client";
+import { authClient, getAccessToken } from "@/lib/auth-client";
 import {
   getPasswordChecks,
   getPasswordError,
@@ -106,6 +106,12 @@ export default function SignUpPage() {
     }
 
     toast.success("Account created successfully! Welcome to OnRent.");
+
+    const token = await getAccessToken({ force: true });
+    if (!token) {
+      toast.warning("Account created, but the API token could not be created.");
+    }
+
     router.push("/dashboard");
     router.refresh();
   };
