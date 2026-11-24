@@ -17,6 +17,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
+import AdminStats from "@/components/dashboard/AdminStats";
 
 export const metadata: Metadata = {
   title: "Dashboard | OnRent",
@@ -51,35 +52,50 @@ export default async function DashboardPage() {
         { icon: Heart, label: "Favorites", value: "0" },
       ];
 
-  const quickLinks = isOwner
+  const quickLinks = isAdmin
     ? [
         {
-          icon: PackagePlus,
-          title: "List new equipment",
-          description: "Add a machine or tool and start earning.",
-          href: "/dashboard/equipment/new",
+          icon: ShieldCheck,
+          title: "Review listings",
+          description: "Approve or reject equipment submitted by owners.",
+          href: "/dashboard/admin/equipment",
         },
         {
-          icon: BriefcaseBusiness,
-          title: "My listings",
-          description: "Review the equipment you have published.",
-          href: "/dashboard/equipment",
+          icon: Package,
+          title: "Browse marketplace",
+          description: "See all equipment currently live on OnRent.",
+          href: "/equipment",
         },
       ]
-    : [
-        {
-          icon: CalendarDays,
-          title: "My rentals",
-          description: "Track your active and upcoming rentals.",
-          href: "/equipment",
-        },
-        {
-          icon: ArrowRight,
-          title: "Browse equipment",
-          description: "Find the right equipment for your next project.",
-          href: "/equipment",
-        },
-      ];
+    : isOwner
+      ? [
+          {
+            icon: PackagePlus,
+            title: "List new equipment",
+            description: "Add a machine or tool and start earning.",
+            href: "/dashboard/equipment/new",
+          },
+          {
+            icon: BriefcaseBusiness,
+            title: "My listings",
+            description: "Review the equipment you have published.",
+            href: "/dashboard/equipment",
+          },
+        ]
+      : [
+          {
+            icon: CalendarDays,
+            title: "My rentals",
+            description: "Track your active and upcoming rentals.",
+            href: "/equipment",
+          },
+          {
+            icon: ArrowRight,
+            title: "Browse equipment",
+            description: "Find the right equipment for your next project.",
+            href: "/equipment",
+          },
+        ];
 
   return (
     <div className="space-y-6">
@@ -106,10 +122,14 @@ export default async function DashboardPage() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href="/equipment"
+                href={isAdmin ? "/dashboard/admin/equipment" : "/equipment"}
                 className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-blue-50"
               >
-                {isOwner ? "Browse marketplace" : "Find equipment"}
+                {isAdmin
+                  ? "Review listings"
+                  : isOwner
+                    ? "Browse marketplace"
+                    : "Find equipment"}
                 <ArrowRight size={16} />
               </Link>
 
@@ -123,22 +143,27 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 lg:w-[360px]">
-            {stats.map(({ icon: Icon, label, value }) => (
-              <div
-                key={label}
-                className="rounded-2xl border border-white/10 bg-white/[0.06] p-3 backdrop-blur"
-              >
-                <Icon size={16} className="text-blue-300" />
-                <p className="mt-2 text-xl font-bold text-white">{value}</p>
-                <p className="mt-0.5 text-[11px] leading-tight text-slate-400">
-                  {label}
-                </p>
-              </div>
-            ))}
-          </div>
+          {!isAdmin && (
+            <div className="grid grid-cols-3 gap-3 lg:w-[360px]">
+              {stats.map(({ icon: Icon, label, value }) => (
+                <div
+                  key={label}
+                  className="rounded-2xl border border-white/10 bg-white/[0.06] p-3 backdrop-blur"
+                >
+                  <Icon size={16} className="text-blue-300" />
+                  <p className="mt-2 text-xl font-bold text-white">{value}</p>
+                  <p className="mt-0.5 text-[11px] leading-tight text-slate-400">
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
+
+      {/* Admin numbers */}
+      {isAdmin && <AdminStats />}
 
       {/* Quick links */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

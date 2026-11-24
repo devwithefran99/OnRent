@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Sparkles,
   UserRound,
+  Users,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -65,6 +66,23 @@ const ownerNav: NavItem[] = [
   },
 ];
 
+const adminNav: NavItem[] = [
+  { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  {
+    label: "Equipment Approvals",
+    href: "/dashboard/admin/equipment",
+    icon: ShieldCheck,
+  },
+  { label: "All Users", href: "/dashboard/admin/users", icon: Users, soon: true },
+  {
+    label: "All Rentals",
+    href: "/dashboard/admin/rentals",
+    icon: CalendarDays,
+    soon: true,
+  },
+  { label: "Browse Equipment", href: "/equipment", icon: PackageSearch },
+];
+
 const accountNav: NavItem[] = [
   { label: "Profile", href: "/dashboard/profile", icon: UserRound, soon: true },
   { label: "Settings", href: "/dashboard/settings", icon: Settings, soon: true },
@@ -77,6 +95,9 @@ const pageTitles: Record<string, string> = {
   "/dashboard/favorites": "Favorites",
   "/dashboard/equipment": "My Equipment",
   "/dashboard/equipment/new": "Add Equipment",
+  "/dashboard/admin/equipment": "Equipment Approvals",
+  "/dashboard/admin/users": "All Users",
+  "/dashboard/admin/rentals": "All Rentals",
   "/dashboard/profile": "Profile",
   "/dashboard/settings": "Settings",
 };
@@ -169,12 +190,9 @@ export default function DashboardShell({
   const [signingOut, setSigningOut] = useState(false);
 
   const isOwner = user.role === "owner";
-  const nav = isOwner ? ownerNav : customerNav;
-  const roleLabel = isOwner
-    ? "Owner"
-    : user.role === "admin"
-      ? "Admin"
-      : "Customer";
+  const isAdmin = user.role === "admin";
+  const nav = isAdmin ? adminNav : isOwner ? ownerNav : customerNav;
+  const roleLabel = isAdmin ? "Admin" : isOwner ? "Owner" : "Customer";
   const pageTitle = pageTitles[pathname] ?? "Dashboard";
   const resolvedTitle =
     pathname.endsWith("/edit") && pathname.startsWith("/dashboard/equipment/")
@@ -251,7 +269,13 @@ export default function DashboardShell({
               <span className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                 <ShieldCheck
                   size={15}
-                  className={isOwner ? "text-orange-400" : "text-blue-400"}
+                  className={
+                    isAdmin
+                      ? "text-violet-400"
+                      : isOwner
+                        ? "text-orange-400"
+                        : "text-blue-400"
+                  }
                 />
                 {roleLabel} workspace
               </span>
@@ -259,9 +283,11 @@ export default function DashboardShell({
               <span
                 className={cn(
                   "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                  isOwner
-                    ? "bg-orange-400/15 text-orange-300"
-                    : "bg-blue-400/15 text-blue-300"
+                  isAdmin
+                    ? "bg-violet-400/15 text-violet-300"
+                    : isOwner
+                      ? "bg-orange-400/15 text-orange-300"
+                      : "bg-blue-400/15 text-blue-300"
                 )}
               >
                 {roleLabel}
