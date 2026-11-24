@@ -36,6 +36,7 @@ export type Equipment = {
   condition?: string;
   terms?: string;
   ownerName?: string;
+  ownerEmail?: string;
   ownerId?: string;
   quantity?: number;
   availableQuantity?: number;
