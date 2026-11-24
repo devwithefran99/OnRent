@@ -12,7 +12,26 @@ import {
   Tag,
   XCircle,
 } from "lucide-react";
-import { getEquipmentById } from "@/lib/data/equipment";
+import { type Equipment } from "@/lib/data/equipment";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+
+async function getEquipment(id: string): Promise<Equipment | null> {
+  try {
+    const response = await fetch(`${API_URL}/api/equipment/${id}`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as { item?: Equipment };
+    return data.item ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -20,7 +39,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const item = getEquipmentById(id);
+  const item = await getEquipment(id);
 
   if (!item) {
     return { title: "Equipment Not Found | OnRent" };
@@ -38,7 +57,7 @@ export default async function EquipmentDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const item = getEquipmentById(id);
+  const item = await getEquipment(id);
 
   if (!item) {
     notFound();
@@ -52,6 +71,12 @@ export default async function EquipmentDetailsPage({
       icon: item.available ? CheckCircle2 : XCircle,
       label: "Availability",
       value: item.available ? "Available now" : "Currently booked",
+    },
+    { icon: Tag, label: "Brand", value: item.brand || "OnRent verified" },
+    {
+      icon: CheckCircle2,
+      label: "Condition",
+      value: item.condition || "Good",
     },
   ];
 
@@ -113,10 +138,15 @@ export default async function EquipmentDetailsPage({
             </p>
 
             <p className="mt-4 text-sm leading-7 text-slate-500">
-              A {item.category.toLowerCase()} available for{" "}
-              {item.rentalType.toLowerCase()} rental in {item.location}. Book
-              directly from a verified owner and get it delivered to your site.
+              {item.description ||
+                `A ${item.category.toLowerCase()} available for ${item.rentalType.toLowerCase()} rental in ${item.location}. Book directly from a verified owner and get it delivered to your site.`}
             </p>
+
+            {item.ownerName && (
+              <p className="mt-3 text-xs font-medium text-slate-400">
+                Listed by {item.ownerName}
+              </p>
+            )}
 
             {/* Price */}
             <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
