@@ -1,20 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { PackageOpen, Search, SlidersHorizontal, X } from "lucide-react";
+import {
+  PackageOpen,
+  RefreshCw,
+  Search,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import EquipmentCard from "./EquipmentCard";
 import {
   categories,
-  priceBounds,
   rentalTypes,
-  searchEquipment,
   type AvailabilityFilter,
   type CategoryFilter,
   type CategoryName,
+  type Equipment,
   type RentalTypeFilter,
   type SortKey,
 } from "@/lib/data/equipment";
+import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const sortOptions: { value: SortKey; label: string }[] = [
@@ -38,6 +44,9 @@ const availabilityOptions: { value: AvailabilityFilter; label: string }[] = [
 ];
 
 const PAGE_SIZE = 9;
+
+// Same range for every user so the sliders stay simple.
+const PRICE_BOUNDS = { min: 0, max: 10_000 };
 
 const selectClass =
   "h-11 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-9 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20";
@@ -72,43 +81,76 @@ const EquipmentExplorer = ({
   const [rentalType, setRentalType] = useState<RentalTypeFilter>("All");
   const [availability, setAvailability] =
     useState<AvailabilityFilter>("All");
-  const [minPrice, setMinPrice] = useState(priceBounds.min);
-  const [maxPrice, setMaxPrice] = useState(priceBounds.max);
+  const [minPrice, setMinPrice] = useState(PRICE_BOUNDS.min);
+  const [maxPrice, setMaxPrice] = useState(PRICE_BOUNDS.max);
   const [sort, setSort] = useState<SortKey>("newest");
   const [visible, setVisible] = useState(PAGE_SIZE);
 
-  // Counts respect every other active filter, so the pill numbers stay truthful.
-  const counts = useMemo(() => {
-    const base = { query, rentalType, availability, minPrice, maxPrice };
-    const map: Record<string, number> = {
-      All: searchEquipment(base).length,
-    };
+  const [results, setResults] = useState<Equipment[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-    for (const name of categories) {
-      map[name] = searchEquipment({ ...base, category: name }).length;
-    }
+  // Search, filter and sort are all done by the Express API.
+  useEffect(() => {
+    let active = true;
 
-    return map;
-  }, [query, rentalType, availability, minPrice, maxPrice]);
+    const timer = setTimeout(() => {
+      setLoading(true);
+      setError(null);
 
-  const results = useMemo(
-    () =>
-      searchEquipment({
-        query,
+      const params = new URLSearchParams({
+        search: query.trim(),
         category,
         rentalType,
         availability,
-        minPrice,
-        maxPrice,
+        minPrice: String(minPrice),
+        maxPrice: String(maxPrice),
         sort,
-      }),
-    [query, category, rentalType, availability, minPrice, maxPrice, sort]
-  );
+        limit: "50",
+      });
+
+      apiFetch<{ items: Equipment[]; total: number }>(
+        `/api/equipment?${params.toString()}`
+      )
+        .then((data) => {
+          if (!active) return;
+          setResults(data.items);
+          setTotal(data.total);
+        })
+        .catch((err: unknown) => {
+          if (!active) return;
+          setResults([]);
+          setTotal(0);
+          setError(
+            err instanceof Error ? err.message : "Could not load equipment."
+          );
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    }, 300);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [
+    query,
+    category,
+    rentalType,
+    availability,
+    minPrice,
+    maxPrice,
+    sort,
+    reloadKey,
+  ]);
 
   const visibleItems = results.slice(0, visible);
 
   const isPriceFiltered =
-    minPrice > priceBounds.min || maxPrice < priceBounds.max;
+    minPrice > PRICE_BOUNDS.min || maxPrice < PRICE_BOUNDS.max;
 
   const activeFilters =
     (category !== "All" ? 1 : 0) +
@@ -122,8 +164,8 @@ const EquipmentExplorer = ({
     setCategory("All");
     setRentalType("All");
     setAvailability("All");
-    setMinPrice(priceBounds.min);
-    setMaxPrice(priceBounds.max);
+    setMinPrice(PRICE_BOUNDS.min);
+    setMaxPrice(PRICE_BOUNDS.max);
     setSort("newest");
     setVisible(PAGE_SIZE);
   };
@@ -270,16 +312,6 @@ const EquipmentExplorer = ({
                     )}
                   >
                     {name}
-                    <span
-                      className={cn(
-                        "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
-                        isActive
-                          ? "bg-white/20 text-white"
-                          : "bg-white text-slate-400"
-                      )}
-                    >
-                      {counts[name] ?? 0}
-                    </span>
                   </button>
                 );
               })}
@@ -303,8 +335,8 @@ const EquipmentExplorer = ({
                   <input
                     id="min-price"
                     type="range"
-                    min={priceBounds.min}
-                    max={priceBounds.max}
+                    min={PRICE_BOUNDS.min}
+                    max={PRICE_BOUNDS.max}
                     step={100}
                     value={minPrice}
                     onChange={(event) => {
@@ -332,8 +364,8 @@ const EquipmentExplorer = ({
                   <input
                     id="max-price"
                     type="range"
-                    min={priceBounds.min}
-                    max={priceBounds.max}
+                    min={PRICE_BOUNDS.min}
+                    max={PRICE_BOUNDS.max}
                     step={100}
                     value={maxPrice}
                     onChange={(event) => {
@@ -357,15 +389,19 @@ const EquipmentExplorer = ({
         {/* Results Meta */}
         <div className="mt-6 flex items-center justify-between gap-4">
           <p className="text-sm text-slate-500">
-            Showing{" "}
-            <span className="font-semibold text-slate-900">
-              {visibleItems.length}
-            </span>{" "}
-            of{" "}
-            <span className="font-semibold text-slate-900">
-              {results.length}
-            </span>{" "}
-            {results.length === 1 ? "item" : "items"}
+            {loading ? (
+              "Loading equipment…"
+            ) : (
+              <>
+                Showing{" "}
+                <span className="font-semibold text-slate-900">
+                  {visibleItems.length}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-slate-900">{total}</span>{" "}
+                {total === 1 ? "item" : "items"}
+              </>
+            )}
           </p>
 
           {activeFilters > 0 && (
@@ -381,7 +417,39 @@ const EquipmentExplorer = ({
         </div>
 
         {/* Grid */}
-        {visibleItems.length > 0 ? (
+        {loading ? (
+          <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-[26rem] animate-pulse rounded-2xl border border-slate-200/80 bg-slate-200/70"
+              />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-dashed border-red-200 bg-white px-6 py-16 text-center">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-red-500">
+              <RefreshCw size={26} />
+            </span>
+
+            <h2 className="mt-5 text-lg font-bold text-slate-900">
+              Could not load equipment
+            </h2>
+
+            <p className="mt-2 max-w-sm text-sm leading-7 text-slate-500">
+              {error}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setReloadKey((key) => key + 1)}
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+            >
+              <RefreshCw size={15} />
+              Try again
+            </button>
+          </div>
+        ) : visibleItems.length > 0 ? (
           <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {visibleItems.map((item, index) => (
               <motion.div
@@ -421,7 +489,7 @@ const EquipmentExplorer = ({
         )}
 
         {/* Load More */}
-        {visible < results.length && (
+        {visible < total && (
           <div className="mt-10 flex justify-center">
             <button
               type="button"

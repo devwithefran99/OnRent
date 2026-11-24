@@ -29,6 +29,13 @@ export type Equipment = {
   status: ListingStatus;
   /** ISO date string, used for the "Recently Added" sort. */
   createdAt: string;
+  /** Extra fields returned by the API for the details page. */
+  description?: string;
+  brand?: string;
+  model?: string;
+  condition?: string;
+  terms?: string;
+  ownerName?: string;
 };
 
 export const categories: CategoryName[] = [
