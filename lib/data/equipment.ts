@@ -36,6 +36,9 @@ export type Equipment = {
   condition?: string;
   terms?: string;
   ownerName?: string;
+  ownerId?: string;
+  quantity?: number;
+  availableQuantity?: number;
 };
 
 export const categories: CategoryName[] = [

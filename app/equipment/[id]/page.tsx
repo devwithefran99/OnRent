@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
-  ArrowRight,
   CalendarDays,
   CheckCircle2,
   MapPin,
@@ -12,6 +12,8 @@ import {
   Tag,
   XCircle,
 } from "lucide-react";
+import { auth } from "@/lib/auth";
+import FavoriteButton from "@/components/equipment/FavoriteButton";
 import { type Equipment } from "@/lib/data/equipment";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
@@ -57,6 +59,14 @@ export default async function EquipmentDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+
+  // P3: equipment details are private. Guests are sent to sign in first.
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session) {
+    redirect(`/signin?redirect=/equipment/${id}`);
+  }
+
   const item = await getEquipment(id);
 
   if (!item) {
@@ -148,25 +158,26 @@ export default async function EquipmentDetailsPage({
               </p>
             )}
 
-            {/* Price */}
-            <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
-              <p className="text-xs text-slate-400">Rental price</p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div className="flex-1 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                <p className="text-xs text-slate-400">Rental price</p>
 
-              <p className="mt-1 text-3xl font-bold text-slate-900">
-                ৳{item.price.toLocaleString("en-BD")}
-                <span className="ml-1 text-sm font-normal text-slate-500">
-                  / {item.rentalType.toLowerCase()}
-                </span>
-              </p>
+                <p className="mt-1 text-3xl font-bold text-slate-900">
+                  ৳{item.price.toLocaleString("en-BD")}
+                  <span className="ml-1 text-sm font-normal text-slate-500">
+                    / {item.rentalType.toLowerCase()}
+                  </span>
+                </p>
+              </div>
+
+              <div className="flex items-end">
+                <FavoriteButton equipmentId={item.id} />
+              </div>
             </div>
 
-            <Link
-              href="/signin"
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-700"
-            >
-              Rent Now
-              <ArrowRight size={16} />
-            </Link>
+            <div className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-500">
+              Booking opens soon
+            </div>
 
             <Link
               href="/equipment"
