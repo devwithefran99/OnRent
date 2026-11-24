@@ -83,7 +83,7 @@ const EquipmentCard = ({ item }: { item: Equipment }) => {
         </div>
 
         <Link
-          href={`/equipment/${item.slug}`}
+          href={`/equipment/${item.id}`}
           className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
         >
           View Details

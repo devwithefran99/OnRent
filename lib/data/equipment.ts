@@ -14,8 +14,8 @@ export type RentalType = "Daily" | "Weekly" | "Monthly";
 export type ListingStatus = "approved" | "pending" | "rejected";
 
 export type Equipment = {
-  id: number;
-  slug: string;
+  /** MongoDB `_id` as a string, so the real API can drop straight in. */
+  id: string;
   name: string;
   category: CategoryName;
   location: string;
@@ -44,8 +44,7 @@ export const rentalTypes: RentalType[] = ["Daily", "Weekly", "Monthly"];
 
 export const equipmentList: Equipment[] = [
   {
-    id: 1,
-    slug: "mini-excavator",
+    id: "64f2a1b3c4d5e6f7a8b9c001",
     name: "Mini Excavator",
     category: "Construction Equipment",
     location: "Chattogram",
@@ -61,8 +60,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-09-02",
   },
   {
-    id: 2,
-    slug: "professional-dslr-camera",
+    id: "64f2a1b3c4d5e6f7a8b9c002",
     name: "Professional DSLR Camera",
     category: "Photography Equipment",
     location: "Dhaka",
@@ -78,8 +76,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-10-14",
   },
   {
-    id: 3,
-    slug: "twenty-foot-delivery-truck",
+    id: "64f2a1b3c4d5e6f7a8b9c003",
     name: "20ft Delivery Truck",
     category: "Vehicles & Transportation",
     location: "Chattogram",
@@ -95,8 +92,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-08-21",
   },
   {
-    id: 4,
-    slug: "power-tiller",
+    id: "64f2a1b3c4d5e6f7a8b9c004",
     name: "Power Tiller",
     category: "Agriculture Equipment",
     location: "Cumilla",
@@ -112,8 +108,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-07-11",
   },
   {
-    id: 5,
-    slug: "heavy-duty-generator",
+    id: "64f2a1b3c4d5e6f7a8b9c005",
     name: "Heavy Duty Generator",
     category: "Electronics",
     location: "Chattogram",
@@ -129,8 +124,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-06-30",
   },
   {
-    id: 6,
-    slug: "event-sound-system",
+    id: "64f2a1b3c4d5e6f7a8b9c006",
     name: "Event Sound System",
     category: "Event Equipment",
     location: "Sylhet",
@@ -146,8 +140,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-11-06",
   },
   {
-    id: 7,
-    slug: "scaffolding-set",
+    id: "64f2a1b3c4d5e6f7a8b9c007",
     name: "Scaffolding Set",
     category: "Construction Equipment",
     location: "Dhaka",
@@ -163,8 +156,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-05-19",
   },
   {
-    id: 8,
-    slug: "cine-prime-lens-kit",
+    id: "64f2a1b3c4d5e6f7a8b9c008",
     name: "Cine Prime Lens Kit",
     category: "Photography Equipment",
     location: "Dhaka",
@@ -180,8 +172,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-10-01",
   },
   {
-    id: 9,
-    slug: "commuter-motorcycle",
+    id: "64f2a1b3c4d5e6f7a8b9c009",
     name: "Commuter Motorcycle",
     category: "Vehicles & Transportation",
     location: "Chattogram",
@@ -197,8 +188,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-04-27",
   },
   {
-    id: 10,
-    slug: "dslr-drone",
+    id: "64f2a1b3c4d5e6f7a8b9c010",
     name: "DSLR Drone",
     category: "Photography Equipment",
     location: "Dhaka",
@@ -214,8 +204,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-11-12",
   },
   {
-    id: 11,
-    slug: "portable-projector",
+    id: "64f2a1b3c4d5e6f7a8b9c011",
     name: "Portable Projector",
     category: "Event Equipment",
     location: "Rajshahi",
@@ -231,8 +220,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-09-24",
   },
   {
-    id: 12,
-    slug: "industrial-power-drill",
+    id: "64f2a1b3c4d5e6f7a8b9c012",
     name: "Industrial Power Drill",
     category: "Construction Equipment",
     location: "Chattogram",
@@ -248,8 +236,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-03-16",
   },
   {
-    id: 13,
-    slug: "desktop-workstation",
+    id: "64f2a1b3c4d5e6f7a8b9c013",
     name: "Desktop Workstation",
     category: "Electronics",
     location: "Dhaka",
@@ -265,8 +252,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-08-05",
   },
   {
-    id: 14,
-    slug: "commercial-treadmill",
+    id: "64f2a1b3c4d5e6f7a8b9c014",
     name: "Commercial Treadmill",
     category: "Electronics",
     location: "Chattogram",
@@ -282,8 +268,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-02-08",
   },
   {
-    id: 15,
-    slug: "mini-harvester",
+    id: "64f2a1b3c4d5e6f7a8b9c015",
     name: "Mini Harvester",
     category: "Agriculture Equipment",
     location: "Rangpur",
@@ -299,8 +284,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-10-22",
   },
   {
-    id: 16,
-    slug: "tower-light",
+    id: "64f2a1b3c4d5e6f7a8b9c016",
     name: "Tower Light",
     category: "Construction Equipment",
     location: "Khulna",
@@ -316,8 +300,7 @@ export const equipmentList: Equipment[] = [
     createdAt: "2026-11-16",
   },
   {
-    id: 17,
-    slug: "vintage-video-camera",
+    id: "64f2a1b3c4d5e6f7a8b9c017",
     name: "Vintage Video Camera",
     category: "Photography Equipment",
     location: "Barishal",
@@ -417,6 +400,6 @@ export function searchEquipment({
   }
 }
 
-export function getEquipmentBySlug(slug: string): Equipment | undefined {
-  return approvedEquipment.find((item) => item.slug === slug);
+export function getEquipmentById(id: string): Equipment | undefined {
+  return approvedEquipment.find((item) => item.id === id);
 }

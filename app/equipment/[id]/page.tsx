@@ -12,15 +12,15 @@ import {
   Tag,
   XCircle,
 } from "lucide-react";
-import { getEquipmentBySlug } from "@/lib/data/equipment";
+import { getEquipmentById } from "@/lib/data/equipment";
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
-  const item = getEquipmentBySlug(slug);
+  const { id } = await params;
+  const item = getEquipmentById(id);
 
   if (!item) {
     return { title: "Equipment Not Found | OnRent" };
@@ -35,10 +35,10 @@ export async function generateMetadata({
 export default async function EquipmentDetailsPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { slug } = await params;
-  const item = getEquipmentBySlug(slug);
+  const { id } = await params;
+  const item = getEquipmentById(id);
 
   if (!item) {
     notFound();
@@ -131,7 +131,7 @@ export default async function EquipmentDetailsPage({
             </div>
 
             <Link
-              href="/login"
+              href="/signin"
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-700"
             >
               Rent Now
