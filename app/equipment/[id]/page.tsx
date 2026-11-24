@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import FavoriteButton from "@/components/equipment/FavoriteButton";
+import BookingForm from "@/components/equipment/BookingForm";
 import { type Equipment } from "@/lib/data/equipment";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
@@ -175,9 +176,14 @@ export default async function EquipmentDetailsPage({
               </div>
             </div>
 
-            <div className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-500">
-              Booking opens soon
-            </div>
+            <BookingForm
+              equipmentId={item.id}
+              price={item.price}
+              rentalType={item.rentalType}
+              availableQuantity={
+                item.availableQuantity ?? (item.available ? 1 : 0)
+              }
+            />
 
             <Link
               href="/equipment"
