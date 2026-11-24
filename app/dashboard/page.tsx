@@ -57,13 +57,13 @@ export default async function DashboardPage() {
           icon: PackagePlus,
           title: "List new equipment",
           description: "Add a machine or tool and start earning.",
-          href: "/equipment",
+          href: "/dashboard/equipment/new",
         },
         {
           icon: BriefcaseBusiness,
           title: "My listings",
           description: "Review the equipment you have published.",
-          href: "/equipment",
+          href: "/dashboard/equipment",
         },
       ]
     : [
