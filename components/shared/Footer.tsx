@@ -1,6 +1,6 @@
 
 import Link from "next/link";
-import Image from "next/image";
+import Logo from "@/components/shared/Logo";
 import {
   FaFacebookF,
   FaInstagram,
@@ -17,15 +17,7 @@ const Footer = () => {
 
           {/* Brand */}
           <div>
-            <Link href="/" className="inline-block">
-              <Image
-                src="/Image/onrent-logo.png"
-                alt="OnRent Logo"
-                width={150}
-                height={50}
-                className="h-auto w-36 object-contain"
-              />
-            </Link>
+            <Logo imageClassName="w-36" />
 
             <p className="mt-5 max-w-xs text-sm leading-7 text-gray-400">
               Rent the equipment you need, when you need it.

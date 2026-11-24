@@ -21,6 +21,7 @@ import {
 import { FaGoogle } from "react-icons/fa6";
 import { toast } from "sonner";
 import { authClient, getAccessToken } from "@/lib/auth-client";
+import Logo from "@/components/shared/Logo";
 import {
   getPasswordChecks,
   getPasswordError,
@@ -132,14 +133,7 @@ export default function SignUpPage() {
             <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-blue-600/20 blur-3xl" />
 
             <div className="relative z-10">
-              <Link href="/" className="inline-flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-xl font-bold text-white">
-                  O
-                </div>
-                <span className="text-2xl font-bold tracking-tight text-white">
-                  On<span className="text-blue-400">Rent</span>
-                </span>
-              </Link>
+              <Logo priority imageClassName="w-44" />
 
               <div className="mt-24">
                 <p className="mb-5 text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">
@@ -202,17 +196,7 @@ export default function SignUpPage() {
               className="w-full max-w-md"
             >
               {/* Mobile Logo */}
-              <Link
-                href="/"
-                className="mb-10 inline-flex items-center gap-2 lg:hidden"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-lg font-bold text-white">
-                  O
-                </div>
-                <span className="text-2xl font-bold text-slate-900">
-                  On<span className="text-blue-600">Rent</span>
-                </span>
-              </Link>
+              <Logo className="mb-10 lg:hidden" imageClassName="w-36" />
 
               <div>
                 <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">

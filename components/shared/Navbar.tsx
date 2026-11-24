@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 import { authClient, clearAuthToken } from "@/lib/auth-client";
+import Logo from "@/components/shared/Logo";
 
 const Navbar = () => {
   const router = useRouter();
@@ -34,16 +34,7 @@ const Navbar = () => {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/Image/onrent-logo.png"
-            alt="OnRent Logo"
-            width={80}
-            height={80}
-            priority
-            className="object-contain"
-          />
-        </Link>
+        <Logo priority imageClassName="w-24 sm:w-28" />
 
         {/* Desktop Navigation */}
         <div className="hidden items-center gap-8 md:flex">

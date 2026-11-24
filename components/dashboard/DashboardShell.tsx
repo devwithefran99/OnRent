@@ -17,13 +17,13 @@ import {
   PackageSearch,
   Settings,
   ShieldCheck,
-  Sparkles,
   UserRound,
   Users,
   X,
   type LucideIcon,
 } from "lucide-react";
 import { authClient, clearAuthToken } from "@/lib/auth-client";
+import Logo from "@/components/shared/Logo";
 import { cn } from "@/lib/utils";
 
 export type DashboardRole = "customer" | "owner" | "admin";
@@ -238,20 +238,12 @@ export default function DashboardShell({
 
             {/* Brand */}
             <div className="relative flex items-center justify-between gap-3 px-5 pb-5 pt-6">
-              <Link href="/" className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-900/50">
-                  <Sparkles size={19} />
+              <div className="flex flex-col gap-1.5">
+                <Logo imageClassName="w-28" />
+                <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">
+                  Dashboard
                 </span>
-
-                <span>
-                  <span className="block text-base font-bold leading-tight text-white">
-                    OnRent
-                  </span>
-                  <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">
-                    Dashboard
-                  </span>
-                </span>
-              </Link>
+              </div>
 
               <button
                 type="button"
