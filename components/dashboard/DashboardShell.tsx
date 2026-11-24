@@ -45,7 +45,7 @@ type NavItem = {
 const customerNav: NavItem[] = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Browse Equipment", href: "/equipment", icon: PackageSearch },
-  { label: "My Rentals", href: "/dashboard/rentals", icon: CalendarDays, soon: true },
+  { label: "My Rentals", href: "/dashboard/rentals", icon: CalendarDays },
   { label: "Favorites", href: "/dashboard/favorites", icon: Heart },
 ];
 
@@ -62,7 +62,6 @@ const ownerNav: NavItem[] = [
     label: "Rental Requests",
     href: "/dashboard/rentals",
     icon: ClipboardList,
-    soon: true,
   },
 ];
 
