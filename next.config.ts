@@ -1,12 +1,12 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-     images: {
+  images: {
+    // Owners can paste any public image URL (imgbb, Google, etc.).
+    // Allow remote images from any https/http host.
     remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
+      { protocol: "https", hostname: "**" },
+      { protocol: "http", hostname: "**" },
     ],
   },
 }
