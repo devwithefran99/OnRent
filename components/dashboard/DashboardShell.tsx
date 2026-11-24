@@ -45,18 +45,17 @@ const customerNav: NavItem[] = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Browse Equipment", href: "/equipment", icon: PackageSearch },
   { label: "My Rentals", href: "/dashboard/rentals", icon: CalendarDays, soon: true },
-  { label: "Favorites", href: "/dashboard/favorites", icon: Heart, soon: true },
+  { label: "Favorites", href: "/dashboard/favorites", icon: Heart },
 ];
 
 const ownerNav: NavItem[] = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Browse Equipment", href: "/equipment", icon: PackageSearch },
-  { label: "My Equipment", href: "/dashboard/equipment", icon: Package, soon: true },
+  { label: "My Equipment", href: "/dashboard/equipment", icon: Package },
   {
     label: "Add Equipment",
     href: "/dashboard/equipment/new",
     icon: PackagePlus,
-    soon: true,
   },
   {
     label: "Rental Requests",
@@ -81,6 +80,14 @@ const pageTitles: Record<string, string> = {
   "/dashboard/profile": "Profile",
   "/dashboard/settings": "Settings",
 };
+
+function isActiveLink(pathname: string, href: string) {
+  if (href === "/dashboard") {
+    return pathname === "/dashboard";
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 function initials(name: string) {
   return name
@@ -169,6 +176,10 @@ export default function DashboardShell({
       ? "Admin"
       : "Customer";
   const pageTitle = pageTitles[pathname] ?? "Dashboard";
+  const resolvedTitle =
+    pathname.endsWith("/edit") && pathname.startsWith("/dashboard/equipment/")
+      ? "Edit Equipment"
+      : pageTitle;
   const close = () => setOpen(false);
 
   const handleSignOut = async () => {
@@ -268,7 +279,7 @@ export default function DashboardShell({
                     <NavLink
                       key={item.href}
                       item={item}
-                      active={pathname === item.href}
+                      active={isActiveLink(pathname, item.href)}
                       onNavigate={close}
                     />
                   ))}
@@ -284,7 +295,7 @@ export default function DashboardShell({
                     <NavLink
                       key={item.href}
                       item={item}
-                      active={pathname === item.href}
+                      active={isActiveLink(pathname, item.href)}
                       onNavigate={close}
                     />
                   ))}
@@ -348,7 +359,7 @@ export default function DashboardShell({
                     {roleLabel} dashboard
                   </p>
                   <h1 className="truncate text-lg font-bold text-slate-900">
-                    {pageTitle}
+                    {resolvedTitle}
                   </h1>
                 </div>
               </div>
