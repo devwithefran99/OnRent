@@ -84,7 +84,7 @@ const adminNav: NavItem[] = [
 ];
 
 const accountNav: NavItem[] = [
-  { label: "Profile", href: "/dashboard/profile", icon: UserRound, soon: true },
+  { label: "Profile", href: "/dashboard/profile", icon: UserRound },
   { label: "Settings", href: "/dashboard/settings", icon: Settings, soon: true },
 ];
 
@@ -399,18 +399,24 @@ export default function DashboardShell({
                   Browse site
                 </Link>
 
-                {user.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={user.image}
-                    alt={user.name}
-                    className="h-9 w-9 rounded-xl object-cover ring-2 ring-slate-100"
-                  />
-                ) : (
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-xs font-bold text-white">
-                    {initials(user.name)}
-                  </span>
-                )}
+                <Link
+                  href="/dashboard/profile"
+                  title="Your profile"
+                  className="rounded-xl transition hover:opacity-90"
+                >
+                  {user.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={user.image}
+                      alt={user.name}
+                      className="h-9 w-9 rounded-xl object-cover ring-2 ring-slate-100"
+                    />
+                  ) : (
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-xs font-bold text-white">
+                      {initials(user.name)}
+                    </span>
+                  )}
+                </Link>
               </div>
             </header>
 
