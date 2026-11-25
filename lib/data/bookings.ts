@@ -1,5 +1,7 @@
 export type BookingStatus = "pending" | "approved" | "rejected" | "completed";
 
+export type PaymentStatus = "unpaid" | "paid" | "refunded";
+
 export type Booking = {
   id: string;
   equipmentId: string;
@@ -21,6 +23,9 @@ export type Booking = {
   address: string;
   note: string;
   status: BookingStatus;
+  /** Filled by Stripe checkout in the payment phase. */
+  paymentStatus?: PaymentStatus;
+  transactionId?: string | null;
   createdAt: string;
 };
 
@@ -30,6 +35,18 @@ export const bookingStatusStyles: Record<BookingStatus, string> = {
   rejected: "border-red-200 bg-red-50 text-red-600",
   completed: "border-blue-200 bg-blue-50 text-blue-600",
 };
+
+export const paymentStatusStyles: Record<PaymentStatus, string> = {
+  unpaid: "border-amber-200 bg-amber-50 text-amber-600",
+  paid: "border-emerald-200 bg-emerald-50 text-emerald-600",
+  refunded: "border-slate-200 bg-slate-50 text-slate-600",
+};
+
+export function paymentStatusLabel(status?: PaymentStatus) {
+  if (status === "paid") return "Paid";
+  if (status === "refunded") return "Refunded";
+  return "Unpaid";
+}
 
 export function formatDate(value: string) {
   const date = new Date(value);
