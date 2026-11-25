@@ -6,10 +6,7 @@ import {
   ArrowRight,
   BriefcaseBusiness,
   CalendarDays,
-  CheckCircle2,
-  Clock3,
   Globe2,
-  Heart,
   Mail,
   Package,
   PackagePlus,
@@ -20,6 +17,7 @@ import {
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import AdminStats from "@/components/dashboard/AdminStats";
+import RoleStats from "@/components/dashboard/RoleStats";
 
 export const metadata: Metadata = {
   title: "Dashboard | OnRent",
@@ -41,18 +39,6 @@ export default async function DashboardPage() {
     : isOwner
       ? "Owner account"
       : "Customer account";
-
-  const stats = isOwner
-    ? [
-        { icon: Package, label: "Listed equipment", value: "0" },
-        { icon: Clock3, label: "Pending approval", value: "0" },
-        { icon: CalendarDays, label: "Rental requests", value: "0" },
-      ]
-    : [
-        { icon: CalendarDays, label: "Active rentals", value: "0" },
-        { icon: CheckCircle2, label: "Completed rentals", value: "0" },
-        { icon: Heart, label: "Favorites", value: "0" },
-      ];
 
   const quickLinks = isAdmin
     ? [
@@ -164,20 +150,7 @@ export default async function DashboardPage() {
           </div>
 
           {!isAdmin && (
-            <div className="grid grid-cols-3 gap-3 lg:w-[360px]">
-              {stats.map(({ icon: Icon, label, value }) => (
-                <div
-                  key={label}
-                  className="rounded-2xl border border-white/10 bg-white/[0.06] p-3 backdrop-blur"
-                >
-                  <Icon size={16} className="text-blue-300" />
-                  <p className="mt-2 text-xl font-bold text-white">{value}</p>
-                  <p className="mt-0.5 text-[11px] leading-tight text-slate-400">
-                    {label}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <RoleStats role={isOwner ? "owner" : "customer"} />
           )}
         </div>
       </section>
