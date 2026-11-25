@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Transition, type Variants } from "framer-motion";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
@@ -36,8 +36,8 @@ const slides = [
 const AUTOPLAY_DELAY = 6000;
 
 // Slide animation: direction 1 = next (enters from right), -1 = previous (enters from left)
-const slideVariants = {
-  enter: (direction) => ({
+const slideVariants: Variants = {
+  enter: (direction: number) => ({
     x: direction > 0 ? "100%" : "-100%",
     opacity: 0.6,
   }),
@@ -45,14 +45,17 @@ const slideVariants = {
     x: 0,
     opacity: 1,
   },
-  exit: (direction) => ({
+  exit: (direction: number) => ({
     x: direction > 0 ? "-100%" : "100%",
     opacity: 0.6,
   }),
 };
 
-const slideTransition = {
-  x: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+const slideTransition: Transition = {
+  x: {
+    duration: 0.6,
+    ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+  },
   opacity: { duration: 0.6 },
 };
 
@@ -60,11 +63,11 @@ const Hero = () => {
   const [[currentSlide, direction], setSlide] = useState([0, 1]);
   const [isPaused, setIsPaused] = useState(false);
 
-  const paginate = (dir) => {
+  const paginate = (dir: number) => {
     setSlide(([prev]) => [(prev + dir + slides.length) % slides.length, dir]);
   };
 
-  const goToSlide = (index) => {
+  const goToSlide = (index: number) => {
     setSlide(([prev]) => (index === prev ? [prev, 1] : [index, index > prev ? 1 : -1]));
   };
 
@@ -131,7 +134,7 @@ const Hero = () => {
                 </Link>
 
                 <Link
-                  href="/register"
+                  href="/signup"
                   className="rounded-lg border border-white/70 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white hover:text-slate-900 sm:text-base"
                 >
                   Get Started
