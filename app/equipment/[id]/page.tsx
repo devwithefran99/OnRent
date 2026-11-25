@@ -5,10 +5,14 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import {
   ArrowLeft,
+  BadgeCheck,
   CalendarDays,
   CheckCircle2,
+  FileText,
+  Mail,
   MapPin,
   Star,
+  Store,
   Tag,
   XCircle,
 } from "lucide-react";
@@ -34,6 +38,15 @@ async function getEquipment(id: string): Promise<Equipment | null> {
   } catch {
     return null;
   }
+}
+
+function initials(name?: string) {
+  return (name || "OnRent")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
 }
 
 export async function generateMetadata({
@@ -216,6 +229,62 @@ export default async function EquipmentDetailsPage({
               </div>
             ))}
           </dl>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Owner information */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+              <Store size={18} className="text-blue-600" />
+              Owner information
+            </h2>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-sm font-bold text-white">
+                {initials(item.ownerName)}
+              </span>
+
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-1.5 font-semibold text-slate-900">
+                  <span className="truncate">
+                    {item.ownerName || "OnRent verified owner"}
+                  </span>
+                  <BadgeCheck size={15} className="shrink-0 text-blue-500" />
+                </p>
+
+                <p className="truncate text-xs text-slate-500">
+                  {item.ownerEmail || "Contact this owner through OnRent"}
+                </p>
+              </div>
+
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+                Verified owner
+              </span>
+            </div>
+
+            {item.ownerEmail && (
+              <a
+                href={`mailto:${item.ownerEmail}`}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-blue-300 hover:text-blue-600"
+              >
+                <Mail size={15} />
+                Email owner
+              </a>
+            )}
+          </div>
+
+          {/* Rental terms */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-slate-900">
+              <FileText size={18} className="text-blue-600" />
+              Rental terms &amp; conditions
+            </h2>
+
+            <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-600">
+              {item.terms?.trim() ||
+                "The owner has not added extra terms. Standard OnRent rules apply: return the equipment in the same condition, on the agreed date, and report any damage before handover."}
+            </p>
+          </div>
         </div>
       </div>
     </main>
