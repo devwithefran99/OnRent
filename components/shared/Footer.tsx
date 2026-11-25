@@ -17,7 +17,7 @@ const Footer = () => {
 
           {/* Brand */}
           <div>
-            <Logo imageClassName="w-36" />
+            <Logo tone="light" imageClassName="w-36" />
 
             <p className="mt-5 max-w-xs text-sm leading-7 text-gray-400">
               Rent the equipment you need, when you need it.

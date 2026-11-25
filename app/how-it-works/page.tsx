@@ -262,7 +262,7 @@ const HowItWorks = () => {
 
           <Link
             href="/equipment"
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 font-semibold text-blue-600 transition hover:bg-orange-600 hover:text-white"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white keep-light px-7 py-3.5 font-semibold text-blue-600 transition hover:bg-orange-600 hover:text-white"
           >
             Browse Equipment
             <ArrowRight size={19} />

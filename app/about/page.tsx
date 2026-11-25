@@ -306,7 +306,7 @@ export default function AboutPage() {
       <section className="px-4 py-20 sm:px-6 md:py-24 lg:px-8">
         <div className="mx-auto max-w-7xl rounded-3xl bg-blue-600 px-6 py-16 text-center sm:px-12">
           <h2 className="text-3xl font-bold text-white sm:text-4xl">
-            Let's Make Your Next Project Easier
+            Let&apos;s Make Your Next Project Easier
           </h2>
 
           <p className="mx-auto mt-5 max-w-2xl leading-7 text-blue-100">
@@ -316,7 +316,7 @@ export default function AboutPage() {
 
           <Link
             href="/equipment"
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 font-semibold text-blue-600 transition hover:bg-orange-600 hover:text-white"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white keep-light px-7 py-3.5 font-semibold text-blue-600 transition hover:bg-orange-600 hover:text-white"
           >
             Browse Equipment
             <ArrowRight size={19} />

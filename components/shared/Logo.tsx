@@ -7,6 +7,8 @@ type LogoProps = {
   className?: string;
   imageClassName?: string;
   priority?: boolean;
+  /** "light" renders the wordmark white, for permanently dark surfaces. */
+  tone?: "brand" | "light";
 };
 
 export default function Logo({
@@ -14,6 +16,7 @@ export default function Logo({
   className,
   imageClassName = "w-32",
   priority = false,
+  tone = "brand",
 }: LogoProps) {
   return (
     <Link href={href} className={cn("inline-flex items-center", className)}>
@@ -23,7 +26,11 @@ export default function Logo({
         width={1955}
         height={520}
         priority={priority}
-        className={cn("h-auto object-contain", imageClassName)}
+        className={cn(
+          "h-auto object-contain",
+          tone === "light" && "brightness-0 invert",
+          imageClassName
+        )}
       />
     </Link>
   );
