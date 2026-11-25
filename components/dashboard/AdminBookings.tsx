@@ -3,22 +3,13 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  CalendarDays,
-  Mail,
-  MapPin,
-  PackageOpen,
-  Phone,
-  RefreshCw,
-  Search,
-  Store,
-  UserRound,
-  X,
-} from "lucide-react";
+import { PackageOpen, RefreshCw, Search, X } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import {
   bookingStatusStyles,
   formatDate,
+  paymentStatusLabel,
+  paymentStatusStyles,
   type Booking,
 } from "@/lib/data/bookings";
 import { cn } from "@/lib/utils";
@@ -142,10 +133,10 @@ export default function AdminBookings() {
 
       {loading && (
         <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, index) => (
+          {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="h-44 animate-pulse rounded-2xl bg-slate-200/70"
+              className="h-16 animate-pulse rounded-xl bg-slate-200/70"
             />
           ))}
         </div>
@@ -185,105 +176,114 @@ export default function AdminBookings() {
       )}
 
       {!loading && !error && visibleItems.length > 0 && (
-        <div className="space-y-3">
+        <>
           <p className="text-xs font-semibold text-slate-400">
             Showing {visibleItems.length}{" "}
             {visibleItems.length === 1 ? "booking" : "bookings"}
           </p>
 
-          {visibleItems.map((booking) => (
-            <article
-              key={booking.id}
-              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-            >
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-24 sm:w-32">
-                  <Image
-                    src={booking.equipmentImage}
-                    alt={booking.equipmentName}
-                    fill
-                    sizes="128px"
-                    className="object-cover"
-                  />
-                </div>
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <table className="w-full min-w-[1120px] text-left text-sm">
+              <thead className="border-b border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Customer</th>
+                  <th className="px-4 py-3 font-semibold">Owner</th>
+                  <th className="px-4 py-3 font-semibold">Equipment</th>
+                  <th className="px-4 py-3 font-semibold">Rental duration</th>
+                  <th className="px-4 py-3 font-semibold">Booking amount</th>
+                  <th className="px-4 py-3 font-semibold">Payment</th>
+                  <th className="px-4 py-3 font-semibold">Status</th>
+                </tr>
+              </thead>
 
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={`/equipment/${booking.equipmentId}`}
-                      className="truncate font-bold text-slate-900 hover:text-blue-600"
-                    >
-                      {booking.equipmentName}
-                    </Link>
+              <tbody className="divide-y divide-slate-100">
+                {visibleItems.map((booking) => (
+                  <tr
+                    key={booking.id}
+                    className="align-middle hover:bg-slate-50/70"
+                  >
+                    <td className="px-4 py-3">
+                      <p className="max-w-[12rem] truncate font-semibold text-slate-900">
+                        {booking.customerName}
+                      </p>
+                      <p className="max-w-[12rem] truncate text-xs text-slate-500">
+                        {booking.customerEmail}
+                      </p>
+                      <p className="text-xs text-slate-400">{booking.phone}</p>
+                    </td>
 
-                    <span
-                      className={cn(
-                        "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                        bookingStatusStyles[booking.status]
-                      )}
-                    >
-                      {booking.status}
-                    </span>
-                  </div>
+                    <td className="px-4 py-3">
+                      <p className="max-w-[10rem] truncate text-slate-700">
+                        {booking.ownerName || "Equipment owner"}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        Requested {formatDate(booking.createdAt)}
+                      </p>
+                    </td>
 
-                  <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                    <span className="inline-flex items-center gap-1">
-                      <CalendarDays size={13} />
-                      {formatDate(booking.startDate)} →{" "}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                          <Image
+                            src={booking.equipmentImage}
+                            alt={booking.equipmentName}
+                            fill
+                            sizes="44px"
+                            className="object-cover"
+                          />
+                        </div>
+                        <Link
+                          href={`/equipment/${booking.equipmentId}`}
+                          className="block max-w-[12rem] truncate font-semibold text-slate-900 hover:text-blue-600"
+                        >
+                          {booking.equipmentName}
+                        </Link>
+                      </div>
+                    </td>
+
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
+                      {formatDate(booking.startDate)}
+                      <span className="mx-1 text-slate-300">→</span>
                       {formatDate(booking.endDate)}
-                    </span>
-                    <span>Qty {booking.quantity}</span>
-                    <span>
-                      {booking.units} × ৳
-                      {booking.unitPrice.toLocaleString("en-BD")}
-                    </span>
-                  </p>
+                      <span className="mt-0.5 block text-xs text-slate-400">
+                        Qty {booking.quantity} · {booking.units}{" "}
+                        {booking.rentalType.toLowerCase()}
+                      </span>
+                    </td>
 
-                  <p className="mt-2 text-base font-bold text-slate-900">
-                    Total ৳{booking.totalPrice.toLocaleString("en-BD")}
-                  </p>
-                </div>
-              </div>
+                    <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">
+                      ৳{booking.totalPrice.toLocaleString("en-BD")}
+                    </td>
 
-              {/* People involved */}
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
-                  <p className="flex items-center gap-1.5 font-semibold text-slate-900">
-                    <UserRound size={13} />
-                    {booking.customerName}
-                  </p>
-                  <p className="mt-1 flex items-center gap-1.5 break-all">
-                    <Mail size={12} />
-                    {booking.customerEmail}
-                  </p>
-                  <p className="mt-1 flex items-center gap-1.5">
-                    <Phone size={12} />
-                    {booking.phone}
-                  </p>
-                  <p className="mt-1 flex items-start gap-1.5">
-                    <MapPin size={12} className="mt-0.5 shrink-0" />
-                    {booking.address}
-                  </p>
-                </div>
+                    <td className="px-4 py-3">
+                      <span
+                        className={cn(
+                          "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                          paymentStatusStyles[
+                            booking.paymentStatus ?? "unpaid"
+                          ]
+                        )}
+                      >
+                        {paymentStatusLabel(booking.paymentStatus)}
+                      </span>
+                    </td>
 
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
-                  <p className="flex items-center gap-1.5 font-semibold text-slate-900">
-                    <Store size={13} />
-                    {booking.ownerName || "Equipment owner"}
-                  </p>
-                  <p className="mt-1 text-slate-500">
-                    Requested on {formatDate(booking.createdAt)}
-                  </p>
-                  {booking.note && (
-                    <p className="mt-2 italic text-slate-500">
-                      “{booking.note}”
-                    </p>
-                  )}
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
+                    <td className="px-4 py-3">
+                      <span
+                        className={cn(
+                          "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                          bookingStatusStyles[booking.status]
+                        )}
+                      >
+                        {booking.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

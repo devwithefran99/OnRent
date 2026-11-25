@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PackageOpen, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import {
+  ArrowRight,
+  PackageOpen,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import type { Equipment } from "@/lib/data/equipment";
@@ -67,10 +74,10 @@ export default function OwnerEquipmentList() {
   if (loading) {
     return (
       <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, index) => (
+        {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="h-28 animate-pulse rounded-2xl bg-slate-200/70"
+            className="h-16 animate-pulse rounded-xl bg-slate-200/70"
           />
         ))}
       </div>
@@ -125,69 +132,119 @@ export default function OwnerEquipmentList() {
   }
 
   return (
-    <div className="space-y-3">
-      {items.map((item) => (
-        <article
-          key={item.id}
-          className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center"
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs font-semibold text-slate-400">
+          {items.length} {items.length === 1 ? "listing" : "listings"}
+        </p>
+
+        <Link
+          href="/dashboard/equipment/new"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-orange-600"
         >
-          <div className="relative h-24 w-full shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-20 sm:w-28">
-            <Image
-              src={item.image}
-              alt={item.name}
-              fill
-              sizes="112px"
-              className="object-cover"
-            />
-          </div>
+          <Plus size={14} />
+          Add equipment
+        </Link>
+      </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate font-bold text-slate-900">{item.name}</h3>
-              <span
-                className={cn(
-                  "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                  statusStyles[item.status] ??
-                    "border-slate-200 bg-slate-50 text-slate-500"
-                )}
-              >
-                {item.status}
-              </span>
-            </div>
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <table className="w-full min-w-[980px] text-left text-sm">
+          <thead className="border-b border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
+            <tr>
+              <th className="px-4 py-3 font-semibold">Equipment</th>
+              <th className="px-4 py-3 font-semibold">Category</th>
+              <th className="px-4 py-3 font-semibold">Rental price</th>
+              <th className="px-4 py-3 font-semibold">Available qty</th>
+              <th className="px-4 py-3 font-semibold">Status</th>
+              <th className="px-4 py-3 text-right font-semibold">Actions</th>
+            </tr>
+          </thead>
 
-            <p className="mt-1 text-sm text-slate-500">
-              {item.category} · {item.location}
-            </p>
+          <tbody className="divide-y divide-slate-100">
+            {items.map((item) => (
+              <tr key={item.id} className="align-middle hover:bg-slate-50/70">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                      />
+                    </div>
 
-            <p className="mt-1 text-sm font-semibold text-slate-900">
-              ৳{item.price.toLocaleString("en-BD")}
-              <span className="ml-1 text-xs font-normal text-slate-500">
-                / {item.rentalType.toLowerCase()}
-              </span>
-            </p>
-          </div>
+                    <div className="min-w-0">
+                      <p className="max-w-[15rem] truncate font-semibold text-slate-900">
+                        {item.name}
+                      </p>
+                      <p className="truncate text-xs text-slate-400">
+                        {item.location}
+                      </p>
+                    </div>
+                  </div>
+                </td>
 
-          <div className="flex shrink-0 gap-2">
-            <Link
-              href={`/dashboard/equipment/${item.id}/edit`}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-600"
-            >
-              <Pencil size={14} />
-              Edit
-            </Link>
+                <td className="px-4 py-3 text-slate-600">{item.category}</td>
 
-            <button
-              type="button"
-              onClick={() => handleDelete(item)}
-              disabled={deletingId === item.id}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Trash2 size={14} />
-              {deletingId === item.id ? "Deleting…" : "Delete"}
-            </button>
-          </div>
-        </article>
-      ))}
+                <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">
+                  ৳{item.price.toLocaleString("en-BD")}
+                  <span className="ml-1 text-xs font-normal text-slate-400">
+                    /{item.rentalType.toLowerCase()}
+                  </span>
+                </td>
+
+                <td className="px-4 py-3 text-slate-600">
+                  {item.availableQuantity ?? item.quantity ?? 0}
+                </td>
+
+                <td className="px-4 py-3">
+                  <span
+                    className={cn(
+                      "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                      statusStyles[item.status] ??
+                        "border-slate-200 bg-slate-50 text-slate-500"
+                    )}
+                  >
+                    {item.status}
+                  </span>
+                </td>
+
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Link
+                      href={`/equipment/${item.id}`}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-blue-300 hover:text-blue-600"
+                    >
+                      View
+                      <ArrowRight size={13} />
+                    </Link>
+
+                    <Link
+                      href={`/dashboard/equipment/${item.id}/edit`}
+                      className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-blue-300 hover:text-blue-600"
+                    >
+                      <Pencil size={13} />
+                      Update
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(item)}
+                      disabled={deletingId === item.id}
+                      className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Trash2 size={13} />
+                      {deletingId === item.id ? "Deleting…" : "Delete"}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

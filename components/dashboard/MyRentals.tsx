@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, MapPin, PackageOpen, RefreshCw, X } from "lucide-react";
+import { PackageOpen, RefreshCw, X } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import {
   bookingStatusStyles,
   formatDate,
+  paymentStatusLabel,
+  paymentStatusStyles,
   type Booking,
 } from "@/lib/data/bookings";
 import { cn } from "@/lib/utils";
@@ -65,10 +67,10 @@ export default function MyRentals() {
   if (loading) {
     return (
       <div className="space-y-3">
-        {Array.from({ length: 3 }).map((_, index) => (
+        {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="h-36 animate-pulse rounded-2xl bg-slate-200/70"
+            className="h-16 animate-pulse rounded-xl bg-slate-200/70"
           />
         ))}
       </div>
@@ -120,72 +122,108 @@ export default function MyRentals() {
   }
 
   return (
-    <div className="space-y-3">
-      {items.map((booking) => (
-        <article
-          key={booking.id}
-          className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-center"
-        >
-          <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-xl bg-slate-100 lg:h-20 lg:w-28">
-            <Image
-              src={booking.equipmentImage}
-              alt={booking.equipmentName}
-              fill
-              sizes="112px"
-              className="object-cover"
-            />
-          </div>
+    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <table className="w-full min-w-[1040px] text-left text-sm">
+        <thead className="border-b border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
+          <tr>
+            <th className="px-4 py-3 font-semibold">Equipment</th>
+            <th className="px-4 py-3 font-semibold">Start date</th>
+            <th className="px-4 py-3 font-semibold">End date</th>
+            <th className="px-4 py-3 font-semibold">Booking date</th>
+            <th className="px-4 py-3 font-semibold">Total amount</th>
+            <th className="px-4 py-3 font-semibold">Payment</th>
+            <th className="px-4 py-3 font-semibold">Status</th>
+            <th className="px-4 py-3 text-right font-semibold">Action</th>
+          </tr>
+        </thead>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={`/equipment/${booking.equipmentId}`}
-                className="truncate font-bold text-slate-900 hover:text-blue-600"
-              >
-                {booking.equipmentName}
-              </Link>
-              <span
-                className={cn(
-                  "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                  bookingStatusStyles[booking.status]
+        <tbody className="divide-y divide-slate-100">
+          {items.map((booking) => (
+            <tr key={booking.id} className="align-middle hover:bg-slate-50/70">
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                    <Image
+                      src={booking.equipmentImage}
+                      alt={booking.equipmentName}
+                      fill
+                      sizes="44px"
+                      className="object-cover"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <Link
+                      href={`/equipment/${booking.equipmentId}`}
+                      className="block max-w-[15rem] truncate font-semibold text-slate-900 hover:text-blue-600"
+                    >
+                      {booking.equipmentName}
+                    </Link>
+                    <p className="truncate text-xs text-slate-400">
+                      Qty {booking.quantity} · {booking.units} × ৳
+                      {booking.unitPrice.toLocaleString("en-BD")}
+                    </p>
+                  </div>
+                </div>
+              </td>
+
+              <td className="whitespace-nowrap px-4 py-3 text-slate-600">
+                {formatDate(booking.startDate)}
+              </td>
+
+              <td className="whitespace-nowrap px-4 py-3 text-slate-600">
+                {formatDate(booking.endDate)}
+              </td>
+
+              <td className="whitespace-nowrap px-4 py-3 text-slate-600">
+                {formatDate(booking.createdAt)}
+              </td>
+
+              <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">
+                ৳{booking.totalPrice.toLocaleString("en-BD")}
+              </td>
+
+              <td className="px-4 py-3">
+                <span
+                  className={cn(
+                    "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                    paymentStatusStyles[booking.paymentStatus ?? "unpaid"]
+                  )}
+                >
+                  {paymentStatusLabel(booking.paymentStatus)}
+                </span>
+              </td>
+
+              <td className="px-4 py-3">
+                <span
+                  className={cn(
+                    "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                    bookingStatusStyles[booking.status]
+                  )}
+                >
+                  {booking.status}
+                </span>
+              </td>
+
+              <td className="px-4 py-3 text-right">
+                {booking.status === "pending" ? (
+                  <button
+                    type="button"
+                    onClick={() => cancelBooking(booking)}
+                    disabled={cancellingId === booking.id}
+                    className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <X size={13} />
+                    {cancellingId === booking.id ? "Cancelling…" : "Cancel"}
+                  </button>
+                ) : (
+                  <span className="text-xs text-slate-300">—</span>
                 )}
-              >
-                {booking.status}
-              </span>
-            </div>
-
-            <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-              <span className="inline-flex items-center gap-1">
-                <CalendarDays size={13} />
-                {formatDate(booking.startDate)} → {formatDate(booking.endDate)}
-              </span>
-              <span>Qty {booking.quantity}</span>
-              <span>{booking.units} × ৳{booking.unitPrice.toLocaleString("en-BD")}</span>
-            </p>
-
-            <p className="mt-1 flex items-center gap-1 text-xs text-slate-400">
-              <MapPin size={13} />
-              {booking.address}
-            </p>
-
-            <p className="mt-2 text-sm font-bold text-slate-900">
-              Total ৳{booking.totalPrice.toLocaleString("en-BD")}
-            </p>
-          </div>
-
-          {booking.status === "pending" && (
-            <button
-              type="button"
-              onClick={() => cancelBooking(booking)}
-              disabled={cancellingId === booking.id}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <X size={14} />
-              {cancellingId === booking.id ? "Cancelling…" : "Cancel"}
-            </button>
-          )}
-        </article>
-      ))}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
