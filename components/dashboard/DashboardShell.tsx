@@ -80,12 +80,16 @@ const adminNav: NavItem[] = [
     href: "/dashboard/admin/rentals",
     icon: CalendarDays,
   },
+  {
+    label: "Settings",
+    href: "/dashboard/admin/settings",
+    icon: Settings,
+  },
   { label: "Browse Equipment", href: "/equipment", icon: PackageSearch },
 ];
 
 const accountNav: NavItem[] = [
   { label: "Profile", href: "/dashboard/profile", icon: UserRound },
-  { label: "Settings", href: "/dashboard/settings", icon: Settings, soon: true },
 ];
 
 const pageTitles: Record<string, string> = {
@@ -99,8 +103,8 @@ const pageTitles: Record<string, string> = {
   "/dashboard/admin/categories": "Categories",
   "/dashboard/admin/users": "All Users",
   "/dashboard/admin/rentals": "All Rentals",
+  "/dashboard/admin/settings": "Platform Settings",
   "/dashboard/profile": "Profile",
-  "/dashboard/settings": "Settings",
 };
 
 function isActiveLink(pathname: string, href: string) {

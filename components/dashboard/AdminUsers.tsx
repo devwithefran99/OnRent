@@ -5,6 +5,7 @@ import Image from "next/image";
 import {
   BadgeCheck,
   CalendarDays,
+  Loader2,
   Mail,
   Package,
   RefreshCw,
@@ -15,7 +16,9 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
 type Role = "customer" | "owner" | "admin";
@@ -53,6 +56,8 @@ const roleIcons: Record<Role, typeof Users> = {
   customer: UserRound,
 };
 
+const roles: Role[] = ["customer", "owner", "admin"];
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -77,12 +82,16 @@ function formatJoined(value: string) {
 }
 
 export default function AdminUsers() {
+  const { data: session } = authClient.useSession();
+  const currentUserId = session?.user?.id;
+
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [items, setItems] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -128,6 +137,31 @@ export default function AdminUsers() {
 
     return `${user.name} ${user.email}`.toLowerCase().includes(term);
   });
+
+  const changeRole = async (user: AdminUser, role: Role) => {
+    if (role === user.role) return;
+
+    setUpdatingId(user.id);
+
+    try {
+      await apiFetch(`/api/admin/users/${user.id}/role`, {
+        method: "PATCH",
+        body: JSON.stringify({ role }),
+      });
+
+      setItems((current) =>
+        current.map((row) => (row.id === user.id ? { ...row, role } : row))
+      );
+
+      toast.success(`${user.name} is now ${role}`);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Could not change this role"
+      );
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -187,10 +221,10 @@ export default function AdminUsers() {
 
       {loading && (
         <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, index) => (
+          {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
-              className="h-28 animate-pulse rounded-2xl bg-slate-200/70"
+              className="h-16 animate-pulse rounded-xl bg-slate-200/70"
             />
           ))}
         </div>
@@ -230,93 +264,147 @@ export default function AdminUsers() {
       )}
 
       {!loading && !error && visibleItems.length > 0 && (
-        <div className="space-y-3">
-          {visibleItems.map((user) => {
-            const role = user.role ?? "customer";
-            const RoleIcon = roleIcons[role] ?? UserRound;
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <table className="w-full min-w-[960px] text-left text-sm">
+            <thead className="border-b border-slate-100 bg-slate-50 text-[11px] uppercase tracking-wider text-slate-400">
+              <tr>
+                <th className="px-4 py-3 font-semibold">User</th>
+                <th className="px-4 py-3 font-semibold">Email</th>
+                <th className="px-4 py-3 font-semibold">Role</th>
+                <th className="px-4 py-3 text-center font-semibold">
+                  Listings
+                </th>
+                <th className="px-4 py-3 text-center font-semibold">
+                  Bookings
+                </th>
+                <th className="px-4 py-3 font-semibold">Joined</th>
+                <th className="px-4 py-3 font-semibold">Change role</th>
+              </tr>
+            </thead>
 
-            return (
-              <article
-                key={user.id}
-                className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center"
-              >
-                {user.image ? (
-                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-2 ring-slate-100">
-                    <Image
-                      src={user.image}
-                      alt={user.name}
-                      fill
-                      sizes="56px"
-                      className="object-cover"
-                    />
-                  </div>
-                ) : (
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-sm font-bold text-white">
-                    {initials(user.name || "OnRent")}
-                  </span>
-                )}
+            <tbody className="divide-y divide-slate-100">
+              {visibleItems.map((user) => {
+                const role = user.role ?? "customer";
+                const RoleIcon = roleIcons[role] ?? UserRound;
+                const isSelf = user.id === currentUserId;
+                const busy = updatingId === user.id;
 
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate font-bold text-slate-900">
-                      {user.name}
-                    </p>
+                return (
+                  <tr
+                    key={user.id}
+                    className="align-middle hover:bg-slate-50/70"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        {user.image ? (
+                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-100 ring-2 ring-slate-100">
+                            <Image
+                              src={user.image}
+                              alt={user.name}
+                              fill
+                              sizes="40px"
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 text-xs font-bold text-white">
+                            {initials(user.name || "OnRent")}
+                          </span>
+                        )}
 
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                        roleStyles[role]
-                      )}
-                    >
-                      <RoleIcon size={11} />
-                      {role}
-                    </span>
+                        <div className="min-w-0">
+                          <p className="flex items-center gap-1.5 truncate font-semibold text-slate-900">
+                            <span className="truncate">{user.name}</span>
+                            {user.emailVerified && (
+                              <BadgeCheck
+                                size={14}
+                                className="shrink-0 text-emerald-500"
+                                aria-label="Email verified"
+                              />
+                            )}
+                            {isSelf && (
+                              <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">
+                                You
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
 
-                    {user.emailVerified && (
-                      <BadgeCheck
-                        size={15}
-                        className="text-emerald-500"
-                        aria-label="Email verified"
-                      />
-                    )}
-                  </div>
+                    <td className="px-4 py-3">
+                      <span className="flex items-center gap-1.5 break-all text-slate-600">
+                        <Mail size={12} className="shrink-0 text-slate-400" />
+                        {user.email}
+                      </span>
+                    </td>
 
-                  <p className="mt-1 flex items-center gap-1.5 break-all text-xs text-slate-500">
-                    <Mail size={12} className="shrink-0" />
-                    {user.email}
-                  </p>
+                    <td className="px-4 py-3">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                          roleStyles[role]
+                        )}
+                      >
+                        <RoleIcon size={11} />
+                        {role}
+                      </span>
+                    </td>
 
-                  <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
-                    <CalendarDays size={12} />
-                    Joined {formatJoined(user.createdAt)}
-                  </p>
-                </div>
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-flex items-center gap-1 text-slate-600">
+                        <Package size={12} className="text-slate-400" />
+                        {user.listings}
+                      </span>
+                    </td>
 
-                {/* Counts */}
-                <div className="grid shrink-0 grid-cols-2 gap-2 sm:w-56">
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-center">
-                    <p className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                      <Package size={11} />
-                      Listings
-                    </p>
-                    <p className="mt-0.5 text-lg font-bold text-slate-900">
-                      {user.listings}
-                    </p>
-                  </div>
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-flex items-center gap-1 text-slate-600">
+                        <CalendarDays size={12} className="text-slate-400" />
+                        {user.bookings}
+                      </span>
+                    </td>
 
-                  <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-center">
-                    <p className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                      <CalendarDays size={11} />
-                      Bookings
-                    </p>
-                    <p className="mt-0.5 text-lg font-bold text-slate-900">
-                      {user.bookings}
-                    </p>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
+                      {formatJoined(user.createdAt)}
+                    </td>
+
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={role}
+                          onChange={(event) =>
+                            changeRole(user, event.target.value as Role)
+                          }
+                          disabled={isSelf || busy}
+                          aria-label={`Change role for ${user.name}`}
+                          title={
+                            isSelf
+                              ? "You cannot change your own role"
+                              : undefined
+                          }
+                          className="h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                        >
+                          {roles.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+
+                        {busy && (
+                          <Loader2
+                            size={14}
+                            className="animate-spin text-slate-400"
+                          />
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
