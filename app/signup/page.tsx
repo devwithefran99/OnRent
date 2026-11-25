@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -17,6 +17,7 @@ import {
   Image as ImageIcon,
   Check,
   X,
+  Loader2,
 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa6";
 import { toast } from "sonner";
@@ -52,6 +53,33 @@ export default function SignUpPage() {
   });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Show a friendly message when Google redirects back with an error.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+
+    if (!error) {
+      return;
+    }
+
+    toast.error(
+      error === "google"
+        ? "Google sign-up failed. Please try again."
+        : "Sign-up failed. Please try again.",
+    );
+
+    // Remove the error params so refreshing the page does not repeat the toast.
+    params.delete("error");
+    params.delete("error_description");
+    const query = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      window.location.pathname + (query ? `?${query}` : ""),
+    );
+  }, []);
 
   const passwordChecks = getPasswordChecks(form.password);
 
@@ -117,8 +145,26 @@ export default function SignUpPage() {
     router.refresh();
   };
 
-  const handleGoogleSignUp = () => {
-    toast.info("Google sign-up will be available soon.");
+  const handleGoogleSignUp = async () => {
+    setGoogleLoading(true);
+
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+        newUserCallbackURL: "/dashboard",
+        errorCallbackURL: "/signup?error=google",
+      });
+
+      // On success the browser is redirected to Google, so only handle errors.
+      if (error) {
+        setGoogleLoading(false);
+        toast.error(error.message ?? "Google sign-up failed. Please try again.");
+      }
+    } catch {
+      setGoogleLoading(false);
+      toast.error("Google sign-up failed. Please try again.");
+    }
   };
 
   return (
@@ -217,10 +263,20 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={handleGoogleSignUp}
-                  className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  disabled={googleLoading}
+                  className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <FaGoogle size={18} className="text-[#EA4335]" />
-                  Continue with Google
+                  {googleLoading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Redirecting to Google…
+                    </>
+                  ) : (
+                    <>
+                      <FaGoogle size={18} className="text-[#EA4335]" />
+                      Continue with Google
+                    </>
+                  )}
                 </button>
 
                 <div className="my-5 flex items-center gap-3">

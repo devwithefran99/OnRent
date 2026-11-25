@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   KeyRound,
+  Loader2,
 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa6";
 import { toast } from "sonner";
@@ -25,6 +26,33 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Show a friendly message when Google redirects back with an error.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+
+    if (!error) {
+      return;
+    }
+
+    toast.error(
+      error === "google"
+        ? "Google sign-in failed. Please try again."
+        : "Sign-in failed. Please try again.",
+    );
+
+    // Remove the error params so refreshing the page does not repeat the toast.
+    params.delete("error");
+    params.delete("error_description");
+    const query = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      window.location.pathname + (query ? `?${query}` : ""),
+    );
+  }, []);
 
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -59,8 +87,32 @@ export default function SignInPage() {
     router.refresh();
   };
 
-  const handleGoogleSignIn = () => {
-    toast.info("Google sign-in will be available soon.");
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+
+    // Keep the "redirect" the proxy added, but only allow same-site paths.
+    const requested = new URLSearchParams(window.location.search).get("redirect");
+    const callbackURL =
+      requested?.startsWith("/") && !requested.startsWith("//")
+        ? requested
+        : "/dashboard";
+
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL,
+        errorCallbackURL: "/signin?error=google",
+      });
+
+      // On success the browser is redirected to Google, so only handle errors.
+      if (error) {
+        setGoogleLoading(false);
+        toast.error(error.message ?? "Google sign-in failed. Please try again.");
+      }
+    } catch {
+      setGoogleLoading(false);
+      toast.error("Google sign-in failed. Please try again.");
+    }
   };
 
   return (
@@ -147,10 +199,20 @@ export default function SignInPage() {
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
-                  className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  disabled={googleLoading}
+                  className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <FaGoogle size={18} className="text-[#EA4335]" />
-                  Continue with Google
+                  {googleLoading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Redirecting to Google…
+                    </>
+                  ) : (
+                    <>
+                      <FaGoogle size={18} className="text-[#EA4335]" />
+                      Continue with Google
+                    </>
+                  )}
                 </button>
 
                 <div className="my-5 flex items-center gap-3">
