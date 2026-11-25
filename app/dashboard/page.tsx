@@ -15,6 +15,7 @@ import {
   PackagePlus,
   ShieldCheck,
   Sparkles,
+  Users,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import AdminStats from "@/components/dashboard/AdminStats";
@@ -66,6 +67,18 @@ export default async function DashboardPage() {
           description: "See all equipment currently live on OnRent.",
           href: "/equipment",
         },
+        {
+          icon: CalendarDays,
+          title: "All rentals",
+          description: "Review every booking request and its status.",
+          href: "/dashboard/admin/rentals",
+        },
+        {
+          icon: Users,
+          title: "All users",
+          description: "Browse customers, owners and admin accounts.",
+          href: "/dashboard/admin/users",
+        },
       ]
     : isOwner
       ? [
@@ -87,7 +100,7 @@ export default async function DashboardPage() {
             icon: CalendarDays,
             title: "My rentals",
             description: "Track your active and upcoming rentals.",
-            href: "/equipment",
+            href: "/dashboard/rentals",
           },
           {
             icon: ArrowRight,

@@ -72,12 +72,11 @@ const adminNav: NavItem[] = [
     href: "/dashboard/admin/equipment",
     icon: ShieldCheck,
   },
-  { label: "All Users", href: "/dashboard/admin/users", icon: Users, soon: true },
+  { label: "All Users", href: "/dashboard/admin/users", icon: Users },
   {
     label: "All Rentals",
     href: "/dashboard/admin/rentals",
     icon: CalendarDays,
-    soon: true,
   },
   { label: "Browse Equipment", href: "/equipment", icon: PackageSearch },
 ];
