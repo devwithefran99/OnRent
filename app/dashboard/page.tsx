@@ -15,6 +15,7 @@ import {
   PackagePlus,
   ShieldCheck,
   Sparkles,
+  Tags,
   Users,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
@@ -72,6 +73,12 @@ export default async function DashboardPage() {
           title: "All rentals",
           description: "Review every booking request and its status.",
           href: "/dashboard/admin/rentals",
+        },
+        {
+          icon: Tags,
+          title: "Categories",
+          description: "Add, rename and organise equipment categories.",
+          href: "/dashboard/admin/categories",
         },
         {
           icon: Users,

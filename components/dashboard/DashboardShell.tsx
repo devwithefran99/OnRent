@@ -17,6 +17,7 @@ import {
   PackageSearch,
   Settings,
   ShieldCheck,
+  Tags,
   UserRound,
   Users,
   X,
@@ -72,6 +73,7 @@ const adminNav: NavItem[] = [
     href: "/dashboard/admin/equipment",
     icon: ShieldCheck,
   },
+  { label: "Categories", href: "/dashboard/admin/categories", icon: Tags },
   { label: "All Users", href: "/dashboard/admin/users", icon: Users },
   {
     label: "All Rentals",
@@ -94,6 +96,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard/equipment": "My Equipment",
   "/dashboard/equipment/new": "Add Equipment",
   "/dashboard/admin/equipment": "Equipment Approvals",
+  "/dashboard/admin/categories": "Categories",
   "/dashboard/admin/users": "All Users",
   "/dashboard/admin/rentals": "All Rentals",
   "/dashboard/profile": "Profile",
