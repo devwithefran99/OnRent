@@ -10,33 +10,40 @@ the separate `OnRent-ServerSIde` repository.
 ## Features
 
 ### Public
-- Premium responsive landing page (hero, categories, featured equipment)
+- Premium responsive landing page with hero slider, categories, featured and
+  popular equipment, why-us, how-it-works and customer reviews
+- Auto-scrolling review marquee (4 reviews, pauses on hover, one card per row
+  on mobile) with reduced-motion support
 - Browse, search, filter, sort and paginate equipment
 - Category cards and counts loaded from the database
-- Equipment details with owner information
+- Equipment details with owner information, rental terms and a booking modal
 - About and How It Works pages
 - Custom 404, loading and error pages
 
 ### Customers
 - Email/password sign up and sign in (better-auth)
-- Google sign-in button (UI ready, OAuth keys pending)
+- Google sign-in and sign-up (Google accounts are created as customers)
 - Profile editing (name, photo, phone, address)
 - Favorites
-- Booking requests with date range, quantity and delivery details
-- My Rentals dashboard with live status and pending cancellation
+- Booking modal with date range, quantity, contact and delivery details
+- My Rentals table with booking date, total amount, payment status and pending
+  cancellation
 
 ### Owners
 - Owner dashboard with real listing and request counts
 - Add, edit and delete equipment
 - Upload-free image URL support
+- My Equipment table with category, price, available quantity and status
 - Approve, reject or complete rental requests
+- Rental table with customer, duration, quantity, amount and payment status
 - Stock quantity reserved on approval and restored on completion
 
 ### Admins
 - Admin overview with live marketplace stats
-- Equipment approvals (approve / reject)
-- All users with listing and booking counts
-- All rentals with status filters and search
+- Equipment approvals (approve / reject), full edit and delete
+- All users table with search, role filters and inline role changes
+- All rentals table with status filters, search and payment status
+- Platform settings (support details, currency, default terms, auto-approve)
 - Category management (create, rename, delete)
 
 ## Tech stack
@@ -73,6 +80,12 @@ Fill in the values:
 | `BETTER_AUTH_URL` | Frontend URL (`http://localhost:3000` in development) |
 | `MONGODB_URI` | MongoDB Atlas connection string (database name: `OnRent`) |
 | `NEXT_PUBLIC_API_URL` | Express API URL (`http://localhost:5000` in development) |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+
+The Google authorized redirect URI must be
+`http://localhost:3000/api/auth/callback/google` in development (replace the
+origin with the deployed URL in production).
 
 ### 3. Start the API
 
@@ -146,6 +159,6 @@ Sign out and sign in again after changing a role so the JWT is refreshed.
 
 ## Roadmap
 
-- Stripe checkout and payment status
-- Real Google OAuth credentials
+- Stripe checkout, payments collection and payment success page
+- Admin and owner analytics charts (revenue and monthly bookings)
 - Production deployment (Vercel + Render)
