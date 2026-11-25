@@ -127,3 +127,30 @@
     @apply font-sans;
     }
 }
+
+/* Infinite review marquee. The track holds two copies of the list, so
+   translating by -50% loops seamlessly. Pauses on hover/focus. */
+@keyframes onrent-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.onrent-marquee {
+  animation: onrent-marquee 36s linear infinite;
+  will-change: transform;
+}
+
+.onrent-marquee:hover,
+.onrent-marquee:focus-within {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onrent-marquee {
+    animation: none;
+  }
+}
