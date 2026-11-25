@@ -1,10 +1,6 @@
-export type CategoryName =
-  | "Construction Equipment"
-  | "Photography Equipment"
-  | "Vehicles & Transportation"
-  | "Agriculture Equipment"
-  | "Electronics"
-  | "Event Equipment";
+// Categories are managed by admins in the database.
+// This plain string type lets the UI accept any category name.
+export type CategoryName = string;
 
 export type RentalType = "Daily" | "Weekly" | "Monthly";
 

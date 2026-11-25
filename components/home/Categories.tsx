@@ -16,7 +16,9 @@ type Category = {
 };
 
 type ApiCategory = {
+  id: string;
   name: string;
+  description: string;
   image: string;
   count: number;
 };
@@ -98,15 +100,19 @@ const Categories = () => {
         if (!active) return;
 
         setCategories(
-          data.items.map((item) => ({
-            id: item.name,
-            name: item.name,
-            description:
-              descriptions[item.name] ??
-              "Explore equipment available for rent in this category.",
-            image: item.image || fallbackImage,
-            count: item.count,
-          }))
+          data.items
+            // Empty categories stay visible in the admin panel only.
+            .filter((item) => item.count > 0)
+            .map((item) => ({
+              id: item.id,
+              name: item.name,
+              description:
+                item.description ||
+                descriptions[item.name] ||
+                "Explore equipment available for rent in this category.",
+              image: item.image || fallbackImage,
+              count: item.count,
+            }))
         );
       })
       .catch(() => {

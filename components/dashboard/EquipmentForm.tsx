@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
@@ -58,6 +58,36 @@ export default function EquipmentForm({
     terms: initial?.terms ?? "",
   });
   const [saving, setSaving] = useState(false);
+  const [categoryOptions, setCategoryOptions] =
+    useState<string[]>(categories);
+
+  // Owners get the latest category list from the database.
+  useEffect(() => {
+    let active = true;
+
+    apiFetch<{ items: { name: string }[] }>("/api/categories")
+      .then((data) => {
+        if (!active) return;
+
+        const names = data.items.map((item) => item.name);
+
+        if (names.length === 0) return;
+
+        setCategoryOptions(names);
+        setForm((current) =>
+          names.includes(current.category)
+            ? current
+            : { ...current, category: names[0] }
+        );
+      })
+      .catch(() => {
+        // API unreachable? Keep the default category list.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const update =
     (field: keyof FormState) =>
@@ -166,7 +196,7 @@ export default function EquipmentForm({
               onChange={update("category")}
               className={inputClass}
             >
-              {categories.map((category) => (
+              {categoryOptions.map((category) => (
                 <option key={category} value={category}>
                   {category}
                 </option>

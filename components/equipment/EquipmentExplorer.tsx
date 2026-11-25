@@ -11,11 +11,10 @@ import {
 } from "lucide-react";
 import EquipmentCard from "./EquipmentCard";
 import {
-  categories,
+  categories as defaultCategories,
   rentalTypes,
   type AvailabilityFilter,
   type CategoryFilter,
-  type CategoryName,
   type Equipment,
   type RentalTypeFilter,
   type SortKey,
@@ -73,10 +72,10 @@ const EquipmentExplorer = ({
   initialCategory?: string;
 }) => {
   const [query, setQuery] = useState("");
+  const [categoryOptions, setCategoryOptions] =
+    useState<string[]>(defaultCategories);
   const [category, setCategory] = useState<CategoryFilter>(
-    categories.includes(initialCategory as CategoryName)
-      ? (initialCategory as CategoryName)
-      : "All"
+    initialCategory && initialCategory !== "All" ? initialCategory : "All"
   );
   const [rentalType, setRentalType] = useState<RentalTypeFilter>("All");
   const [availability, setAvailability] =
@@ -91,6 +90,26 @@ const EquipmentExplorer = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  // Load the category pills from the database (admin-managed).
+  useEffect(() => {
+    let active = true;
+
+    apiFetch<{ items: { name: string }[] }>("/api/categories")
+      .then((data) => {
+        if (!active) return;
+
+        const names = data.items.map((item) => item.name);
+        if (names.length > 0) setCategoryOptions(names);
+      })
+      .catch(() => {
+        // Keep the default list if the API is unreachable.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Search, filter and sort are all done by the Express API.
   useEffect(() => {
@@ -292,7 +311,7 @@ const EquipmentExplorer = ({
           <div className="mt-4 space-y-4 border-t border-slate-100 pt-4">
             {/* Category Pills */}
             <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {(["All", ...categories] as CategoryFilter[]).map((name) => {
+              {(["All", ...categoryOptions] as CategoryFilter[]).map((name) => {
                 const isActive = category === name;
 
                 return (
