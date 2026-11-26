@@ -23,8 +23,7 @@ export default async function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Platform Settings</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="text-sm text-slate-500">
           Manage support details, rental defaults and how new listings are
           reviewed.
         </p>

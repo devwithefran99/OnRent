@@ -19,8 +19,7 @@ export default async function FavoritesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Favorites</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="text-sm text-slate-500">
           Equipment you saved for later. Open an item to rent it.
         </p>
       </div>

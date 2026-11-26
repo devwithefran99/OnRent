@@ -5,7 +5,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowUpRight,
+  Bell,
   CalendarDays,
+  ChevronRight,
   ClipboardList,
   Globe2,
   Heart,
@@ -15,8 +17,12 @@ import {
   Package,
   PackagePlus,
   PackageSearch,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
   Settings,
   ShieldCheck,
+  Sparkles,
   Tags,
   UserRound,
   Users,
@@ -25,6 +31,7 @@ import {
 } from "lucide-react";
 import { authClient, clearAuthToken } from "@/lib/auth-client";
 import Logo from "@/components/shared/Logo";
+import ThemeToggle from "@/components/shared/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 export type DashboardRole = "customer" | "owner" | "admin";
@@ -107,6 +114,33 @@ const pageTitles: Record<string, string> = {
   "/dashboard/profile": "Profile",
 };
 
+const roleThemes = {
+  customer: {
+    label: "Customer",
+    from: "#0ea5e9",
+    to: "#2563eb",
+    accent: "#2563eb",
+    glow: "rgba(37, 99, 235, 0.45)",
+    chip: "bg-sky-400/15 text-sky-300",
+  },
+  owner: {
+    label: "Owner",
+    from: "#f59e0b",
+    to: "#ea580c",
+    accent: "#ea580c",
+    glow: "rgba(234, 88, 12, 0.45)",
+    chip: "bg-amber-400/15 text-amber-300",
+  },
+  admin: {
+    label: "Admin",
+    from: "#8b5cf6",
+    to: "#d946ef",
+    accent: "#8b5cf6",
+    glow: "rgba(139, 92, 246, 0.45)",
+    chip: "bg-violet-400/15 text-violet-300",
+  },
+} as const;
+
 function isActiveLink(pathname: string, href: string) {
   if (href === "/dashboard") {
     return pathname === "/dashboard";
@@ -127,56 +161,100 @@ function initials(name: string) {
 function NavLink({
   item,
   active,
+  collapsed,
+  accent,
   onNavigate,
 }: {
   item: NavItem;
   active: boolean;
+  collapsed: boolean;
+  accent: string;
   onNavigate: () => void;
 }) {
   const Icon = item.icon;
 
   const className = cn(
-    "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
     active
-      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-950/40"
+      ? "text-white shadow-lg"
       : item.soon
         ? "cursor-not-allowed text-slate-500"
-        : "text-slate-400 hover:bg-white/5 hover:text-white"
+        : "text-slate-400 hover:bg-white/[0.06] hover:text-white",
+    collapsed && "lg:justify-center lg:px-0"
   );
 
   const content = (
     <>
+      {active && (
+        <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-white/80" />
+      )}
+
       <Icon
         size={18}
         className={cn(
           "shrink-0 transition",
-          active ? "text-white" : "text-slate-500 group-hover:text-blue-300",
+          active ? "text-white" : "text-slate-500 group-hover:text-white",
           item.soon && !active && "text-slate-600"
         )}
       />
 
-      <span className="flex-1 truncate">{item.label}</span>
+      <span
+        className={cn(
+          "flex-1 truncate text-left",
+          collapsed && "lg:hidden"
+        )}
+      >
+        {item.label}
+      </span>
 
       {item.soon && (
-        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        <span
+          className={cn(
+            "rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400",
+            collapsed && "lg:hidden"
+          )}
+        >
           Soon
         </span>
       )}
 
-      {active && <ArrowUpRight size={15} className="shrink-0 text-white/80" />}
+      {active && (
+        <ArrowUpRight
+          size={15}
+          className={cn("shrink-0 text-white/80", collapsed && "lg:hidden")}
+        />
+      )}
     </>
   );
 
   if (item.soon) {
     return (
-      <span aria-disabled="true" className={className}>
+      <span
+        aria-disabled="true"
+        title={collapsed ? item.label : undefined}
+        className={className}
+      >
         {content}
       </span>
     );
   }
 
   return (
-    <Link href={item.href} onClick={onNavigate} className={className}>
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      title={collapsed ? item.label : undefined}
+      aria-current={active ? "page" : undefined}
+      className={className}
+      style={
+        active
+          ? {
+              backgroundImage: `linear-gradient(100deg, ${accent}, ${accent}cc)`,
+              boxShadow: `0 12px 28px -14px ${accent}`,
+            }
+          : undefined
+      }
+    >
       {content}
     </Link>
   );
@@ -184,26 +262,43 @@ function NavLink({
 
 export default function DashboardShell({
   user,
+  defaultCollapsed = false,
   children,
 }: {
   user: DashboardUser;
+  defaultCollapsed?: boolean;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [menuPath, setMenuPath] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [signingOut, setSigningOut] = useState(false);
 
   const isOwner = user.role === "owner";
   const isAdmin = user.role === "admin";
   const nav = isAdmin ? adminNav : isOwner ? ownerNav : customerNav;
-  const roleLabel = isAdmin ? "Admin" : isOwner ? "Owner" : "Customer";
+  const theme = roleThemes[user.role];
+  const roleLabel = theme.label;
   const pageTitle = pageTitles[pathname] ?? "Dashboard";
   const resolvedTitle =
     pathname.endsWith("/edit") && pathname.startsWith("/dashboard/equipment/")
       ? "Edit Equipment"
       : pageTitle;
-  const close = () => setOpen(false);
+
+  const open = menuPath === pathname;
+
+  const close = () => setMenuPath(null);
+
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+
+    setCollapsed(next);
+
+    document.cookie = `onrent_dashboard_sidebar=${
+      next ? "collapsed" : "expanded"
+    }; path=/; max-age=31536000; samesite=lax`;
+  };
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -215,94 +310,150 @@ export default function DashboardShell({
   };
 
   return (
-    <div className="bg-slate-100/70">
+    <div className="relative min-h-screen bg-[#f4f7fb] dark:bg-slate-950">
+      {/* Ambient background */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+      >
+        <div
+          className="absolute -top-32 right-[-10%] h-[420px] w-[420px] rounded-full opacity-30 blur-3xl dark:opacity-20"
+          style={{ backgroundColor: theme.accent }}
+        />
+        <div className="absolute bottom-0 left-[-12%] h-[380px] w-[380px] rounded-full bg-sky-300/20 blur-3xl dark:bg-sky-500/10" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.07)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_at_top,black,transparent_75%)]" />
+      </div>
+
       {/* Mobile backdrop */}
       <div
         aria-hidden="true"
         onClick={close}
         className={cn(
-          "fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm transition-opacity lg:hidden",
+          "fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-sm transition-opacity lg:hidden",
           open ? "opacity-100" : "pointer-events-none opacity-0"
         )}
       />
 
-      <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <div className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-8">
+      <div className="relative mx-auto w-full max-w-[1560px] px-3 pb-10 pt-4 sm:px-5 lg:px-6 lg:pt-6">
+        <div className="lg:flex lg:items-start lg:gap-5">
           {/* Sidebar */}
           <aside
             className={cn(
-              "fixed inset-y-0 left-0 z-[60] flex w-[280px] flex-col overflow-hidden bg-slate-950 text-slate-300 shadow-2xl transition-transform duration-300",
-              "lg:sticky lg:top-28 lg:bottom-auto lg:z-0 lg:h-[calc(100vh-7rem)] lg:translate-x-0 lg:rounded-3xl lg:shadow-xl",
+              "fixed inset-y-0 left-0 z-[70] flex w-[276px] flex-col overflow-hidden bg-slate-950 text-slate-300 shadow-2xl transition-[transform,width] duration-300 ease-out",
+              "lg:sticky lg:inset-y-auto lg:left-auto lg:top-[101px] lg:z-10 lg:h-[calc(100vh-7.75rem)] lg:translate-x-0 lg:rounded-[26px]",
+              "border border-white/5",
+              collapsed && "lg:w-[84px]",
               open ? "translate-x-0" : "-translate-x-full"
             )}
           >
-            {/* Glow */}
+            {/* Role glow */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="absolute -left-16 top-8 h-48 w-48 rounded-full bg-blue-600/25 blur-3xl" />
-              <div className="absolute -bottom-20 -right-10 h-56 w-56 rounded-full bg-indigo-500/15 blur-3xl" />
+              <div
+                className="absolute -left-20 top-0 h-56 w-56 rounded-full opacity-30 blur-3xl"
+                style={{ backgroundColor: theme.accent }}
+              />
+              <div className="absolute -bottom-24 -right-12 h-60 w-60 rounded-full bg-indigo-500/10 blur-3xl" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
             </div>
 
             {/* Brand */}
-            <div className="relative flex items-center justify-between gap-3 px-5 pb-5 pt-6">
-              <div className="flex flex-col gap-1.5">
-                <Logo imageClassName="w-28" />
-                <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">
-                  Dashboard
-                </span>
+            <div
+              className={cn(
+                "relative flex h-[74px] shrink-0 items-center gap-3 border-b border-white/5 px-4",
+                collapsed && "lg:justify-center lg:px-0"
+              )}
+            >
+              <div className={cn(collapsed && "lg:hidden")}>
+                <Logo tone="light" imageClassName="w-[104px]" />
               </div>
+
+              <Link
+                href="/dashboard"
+                title="OnRent dashboard"
+                className={cn(
+                  "hidden h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-base font-black text-white",
+                  collapsed && "lg:flex"
+                )}
+                style={{
+                  backgroundImage: `linear-gradient(135deg, ${theme.from}, ${theme.to})`,
+                  boxShadow: `0 10px 24px -12px ${theme.accent}`,
+                }}
+              >
+                O
+              </Link>
 
               <button
                 type="button"
                 onClick={close}
                 aria-label="Close menu"
-                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white lg:hidden"
+                className="ml-auto rounded-lg p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white lg:hidden"
               >
                 <X size={18} />
               </button>
             </div>
 
             {/* Role badge */}
-            <div className="relative mx-5 mb-5 flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5">
-              <span className="flex items-center gap-2 text-xs font-semibold text-slate-300">
-                <ShieldCheck
-                  size={15}
-                  className={
-                    isAdmin
-                      ? "text-violet-400"
-                      : isOwner
-                        ? "text-orange-400"
-                        : "text-blue-400"
-                  }
-                />
+            <div
+              className={cn(
+                "relative mx-4 mt-4 flex items-center justify-between gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.04] px-3 py-2.5",
+                collapsed && "lg:mx-2 lg:justify-center lg:px-0"
+              )}
+            >
+              <span
+                className={cn(
+                  "flex items-center gap-2 text-xs font-semibold text-slate-300",
+                  collapsed && "lg:hidden"
+                )}
+              >
+                <ShieldCheck size={15} style={{ color: theme.accent }} />
                 {roleLabel} workspace
               </span>
 
               <span
                 className={cn(
                   "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                  isAdmin
-                    ? "bg-violet-400/15 text-violet-300"
-                    : isOwner
-                      ? "bg-orange-400/15 text-orange-300"
-                      : "bg-blue-400/15 text-blue-300"
+                  theme.chip,
+                  collapsed && "lg:hidden"
                 )}
               >
                 {roleLabel}
               </span>
+
+              <span
+                className={cn(
+                  "hidden h-8 w-8 items-center justify-center rounded-xl",
+                  collapsed && "lg:flex"
+                )}
+                style={{
+                  backgroundColor: `${theme.accent}26`,
+                  color: theme.accent,
+                }}
+                title={`${roleLabel} workspace`}
+              >
+                <ShieldCheck size={16} />
+              </span>
             </div>
 
             {/* Navigation */}
-            <nav className="relative flex-1 space-y-6 overflow-y-auto px-3 pb-4 [scrollbar-width:thin]">
+            <nav className="relative flex-1 space-y-6 overflow-y-auto overflow-x-hidden px-3 pb-4 pt-5 [scrollbar-width:thin]">
               <div>
-                <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                <p
+                  className={cn(
+                    "px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600",
+                    collapsed && "lg:hidden"
+                  )}
+                >
                   Workspace
                 </p>
+                <div className={cn("mb-2 hidden h-px bg-white/5", collapsed && "lg:block")} />
                 <div className="space-y-1">
                   {nav.map((item) => (
                     <NavLink
                       key={item.href}
                       item={item}
                       active={isActiveLink(pathname, item.href)}
+                      collapsed={collapsed}
+                      accent={theme.accent}
                       onNavigate={close}
                     />
                   ))}
@@ -310,25 +461,87 @@ export default function DashboardShell({
               </div>
 
               <div>
-                <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                <p
+                  className={cn(
+                    "px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600",
+                    collapsed && "lg:hidden"
+                  )}
+                >
                   Account
                 </p>
+                <div className={cn("mb-2 hidden h-px bg-white/5", collapsed && "lg:block")} />
                 <div className="space-y-1">
                   {accountNav.map((item) => (
                     <NavLink
                       key={item.href}
                       item={item}
                       active={isActiveLink(pathname, item.href)}
+                      collapsed={collapsed}
+                      accent={theme.accent}
                       onNavigate={close}
                     />
                   ))}
                 </div>
               </div>
+
+              <Link
+                href="/"
+                title="Back to site"
+                className={cn(
+                  "group flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2.5 text-sm font-medium text-slate-400 transition hover:border-white/15 hover:text-white",
+                  collapsed && "lg:justify-center lg:px-0"
+                )}
+              >
+                <Globe2 size={17} className="shrink-0 text-slate-500" />
+                <span className={cn("flex-1", collapsed && "lg:hidden")}>
+                  Back to site
+                </span>
+                <ArrowUpRight
+                  size={14}
+                  className={cn("opacity-50", collapsed && "lg:hidden")}
+                />
+              </Link>
             </nav>
 
+            {/* Help card */}
+            <div
+              className={cn(
+                "relative px-3 pb-3",
+                collapsed && "lg:hidden"
+              )}
+            >
+              <Link
+                href="/how-it-works"
+                className="group block overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-br from-white/[0.08] to-white/[0.01] p-3 transition hover:border-white/15"
+              >
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white">
+                  <Sparkles size={13} style={{ color: theme.from }} />
+                  Need a hand?
+                </span>
+                <p className="mt-1 text-[11px] leading-5 text-slate-400">
+                  Learn how renting works in under a minute.
+                </p>
+                <span
+                  className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
+                  style={{ color: theme.from }}
+                >
+                  How it works
+                  <ArrowUpRight
+                    size={11}
+                    className="transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  />
+                </span>
+              </Link>
+            </div>
+
             {/* User card */}
-            <div className="relative border-t border-white/10 p-4">
-              <div className="flex items-center gap-3 rounded-2xl bg-white/[0.04] p-3">
+            <div className="relative border-t border-white/5 p-3">
+              <div
+                className={cn(
+                  "flex items-center gap-3 rounded-2xl bg-white/[0.04] p-2.5",
+                  collapsed && "lg:flex-col lg:gap-2 lg:p-2"
+                )}
+              >
                 {user.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -337,16 +550,28 @@ export default function DashboardShell({
                     className="h-10 w-10 shrink-0 rounded-xl object-cover ring-2 ring-white/10"
                   />
                 ) : (
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-sm font-bold text-white">
+                  <span
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
+                    style={{
+                      backgroundImage: `linear-gradient(135deg, ${theme.from}, ${theme.to})`,
+                    }}
+                  >
                     {initials(user.name)}
                   </span>
                 )}
 
-                <div className="min-w-0 flex-1">
+                <div
+                  className={cn(
+                    "min-w-0 flex-1",
+                    collapsed && "lg:hidden"
+                  )}
+                >
                   <p className="truncate text-sm font-semibold text-white">
                     {user.name}
                   </p>
-                  <p className="truncate text-xs text-slate-500">{user.email}</p>
+                  <p className="truncate text-xs text-slate-500">
+                    {user.email}
+                  </p>
                 </div>
 
                 <button
@@ -364,36 +589,70 @@ export default function DashboardShell({
           </aside>
 
           {/* Main column */}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             {/* Topbar */}
-            <header className="sticky top-[112px] z-40 flex items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white/85 px-4 py-3 shadow-sm backdrop-blur-md sm:px-5">
-              <div className="flex min-w-0 items-center gap-3">
+            <header className="sticky top-[73px] z-30 mb-5 flex items-center justify-between gap-3 rounded-2xl border border-slate-200/70 bg-white/85 px-3 py-2.5 shadow-sm backdrop-blur-xl sm:px-4 lg:top-[77px] dark:border-slate-800/70 dark:bg-slate-900/80">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <button
                   type="button"
-                  onClick={() => setOpen(true)}
-                  aria-label="Open menu"
-                  className="rounded-xl border border-slate-200 p-2 text-slate-600 transition hover:border-blue-200 hover:text-blue-600 lg:hidden"
+                  onClick={toggleCollapsed}
+                  aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                  aria-pressed={collapsed}
+                  className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-900 lg:inline-flex dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-white"
                 >
-                  <Menu size={19} />
+                  {collapsed ? (
+                    <PanelLeftOpen size={17} />
+                  ) : (
+                    <PanelLeftClose size={17} />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMenuPath(pathname)}
+                  aria-label="Open menu"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:text-slate-900 lg:hidden dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                >
+                  <Menu size={18} />
                 </button>
 
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    {roleLabel} dashboard
+                  <p className="hidden items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:flex">
+                    Dashboard
+                    <ChevronRight size={10} />
+                    {roleLabel}
                   </p>
-                  <h1 className="truncate text-lg font-bold text-slate-900">
+                  <h1 className="truncate text-base font-bold text-slate-900 sm:text-lg dark:text-white">
                     {resolvedTitle}
                   </h1>
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2">
-                <Link
-                  href="/equipment"
-                  className="hidden items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-600 sm:inline-flex"
+              <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                <form
+                  action="/equipment"
+                  className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 transition focus-within:border-slate-300 md:flex dark:border-slate-800 dark:bg-slate-950/60"
                 >
-                  <Globe2 size={14} />
-                  Browse site
+                  <Search size={14} className="text-slate-400" />
+                  <input
+                    type="search"
+                    name="search"
+                    placeholder="Search equipment"
+                    aria-label="Search equipment"
+                    className="w-24 bg-transparent text-xs text-slate-700 outline-none placeholder:text-slate-400 lg:w-32 dark:text-slate-200"
+                  />
+                </form>
+
+                <ThemeToggle />
+
+                <Link
+                  href={isAdmin ? "/dashboard/admin/rentals" : "/dashboard/rentals"}
+                  aria-label="Rental notifications"
+                  title="Rentals"
+                  className="relative hidden h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:text-slate-900 sm:inline-flex dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-white"
+                >
+                  <Bell size={16} />
+                  <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-500" />
                 </Link>
 
                 <Link
@@ -406,10 +665,15 @@ export default function DashboardShell({
                     <img
                       src={user.image}
                       alt={user.name}
-                      className="h-9 w-9 rounded-xl object-cover ring-2 ring-slate-100"
+                      className="h-9 w-9 rounded-xl object-cover ring-2 ring-white shadow-sm dark:ring-slate-800"
                     />
                   ) : (
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 text-xs font-bold text-white">
+                    <span
+                      className="flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold text-white"
+                      style={{
+                        backgroundImage: `linear-gradient(135deg, ${theme.from}, ${theme.to})`,
+                      }}
+                    >
                       {initials(user.name)}
                     </span>
                   )}
@@ -417,7 +681,7 @@ export default function DashboardShell({
               </div>
             </header>
 
-            <main className="mt-6 min-w-0">{children}</main>
+            <main className="min-w-0">{children}</main>
           </div>
         </div>
       </div>

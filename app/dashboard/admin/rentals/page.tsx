@@ -23,8 +23,7 @@ export default async function AdminRentalsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">All rentals</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="text-sm text-slate-500">
           Every booking request on OnRent, with customer and owner details.
         </p>
       </div>

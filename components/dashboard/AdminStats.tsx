@@ -46,7 +46,7 @@ export default function AdminStats() {
       {cards.map(({ key, label, icon: Icon, tone }) => (
         <div
           key={key}
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+          className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
         >
           <span
             className={`flex h-10 w-10 items-center justify-center rounded-xl ${tone}`}
@@ -55,14 +55,16 @@ export default function AdminStats() {
           </span>
 
           {loading ? (
-            <div className="mt-4 h-7 w-12 animate-pulse rounded bg-slate-200" />
+            <div className="mt-4 h-7 w-12 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
           ) : (
-            <p className="mt-4 text-2xl font-bold text-slate-900">
+            <p className="mt-4 text-2xl font-bold text-slate-900 dark:text-white">
               {stats?.[key] ?? 0}
             </p>
           )}
 
-          <p className="mt-1 text-xs font-medium text-slate-500">{label}</p>
+          <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+            {label}
+          </p>
         </div>
       ))}
     </div>

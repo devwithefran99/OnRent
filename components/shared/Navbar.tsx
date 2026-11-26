@@ -70,7 +70,7 @@ const Navbar = () => {
         />
 
         {/* Desktop navigation pill */}
-        <div className="hidden items-center gap-1 rounded-full border border-slate-200/70 bg-slate-50/80 p-1 md:flex dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="hidden items-center gap-1 rounded-full border border-slate-200/70 bg-slate-50/80 p-1 lg:flex dark:border-slate-800 dark:bg-slate-900/60">
           {navLinks.map((link) => {
             const active = isActive(link.href);
 
@@ -93,7 +93,7 @@ const Navbar = () => {
         </div>
 
         {/* Desktop actions */}
-        <div className="hidden items-center gap-2.5 md:flex">
+        <div className="hidden items-center gap-2.5 lg:flex">
           <ThemeToggle />
 
           {isPending ? (
@@ -164,7 +164,7 @@ const Navbar = () => {
         </div>
 
         {/* Mobile controls */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 lg:hidden">
           <ThemeToggle />
 
           <button
@@ -182,7 +182,7 @@ const Navbar = () => {
       {/* Mobile drawer */}
       <div
         className={cn(
-          "overflow-hidden border-slate-200/70 bg-white/95 backdrop-blur-xl transition-all duration-300 md:hidden dark:border-slate-800 dark:bg-slate-950/95",
+          "overflow-hidden border-slate-200/70 bg-white/95 backdrop-blur-xl transition-all duration-300 lg:hidden dark:border-slate-800 dark:bg-slate-950/95",
           isOpen
             ? "visible max-h-[34rem] border-t opacity-100"
             : "invisible max-h-0 opacity-0"

@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import DashboardShell, {
@@ -17,9 +17,13 @@ export default async function DashboardLayout({
   }
 
   const { user } = session;
+  const cookieStore = await cookies();
+  const defaultCollapsed =
+    cookieStore.get("onrent_dashboard_sidebar")?.value === "collapsed";
 
   return (
     <DashboardShell
+      defaultCollapsed={defaultCollapsed}
       user={{
         name: user.name,
         email: user.email,

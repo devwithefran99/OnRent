@@ -16,13 +16,21 @@ import {
   Users,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 import AdminStats from "@/components/dashboard/AdminStats";
 import RoleStats from "@/components/dashboard/RoleStats";
+import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 
 export const metadata: Metadata = {
   title: "Dashboard | OnRent",
   description: "Manage your OnRent rentals and listings.",
 };
+
+const roleAccents = {
+  customer: { accent: "#2563eb", from: "#0ea5e9", label: "Customer" },
+  owner: { accent: "#ea580c", from: "#f59e0b", label: "Owner" },
+  admin: { accent: "#8b5cf6", from: "#d946ef", label: "Admin" },
+} as const;
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -32,13 +40,11 @@ export default async function DashboardPage() {
   }
 
   const { user } = session;
-  const isAdmin = user.role === "admin";
-  const isOwner = user.role === "owner";
-  const roleLabel = isAdmin
-    ? "Admin account"
-    : isOwner
-      ? "Owner account"
-      : "Customer account";
+  const role = (user.role ?? "customer") as "customer" | "owner" | "admin";
+  const isAdmin = role === "admin";
+  const isOwner = role === "owner";
+  const theme = roleAccents[role];
+  const RoleIcon = isAdmin ? ShieldCheck : isOwner ? BriefcaseBusiness : Sparkles;
 
   const quickLinks = isAdmin
     ? [
@@ -104,17 +110,28 @@ export default async function DashboardPage() {
         ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 p-6 text-white shadow-xl sm:p-8">
-        <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-blue-500/25 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/3 h-64 w-64 rounded-full bg-indigo-500/15 blur-3xl" />
+      <section className="relative overflow-hidden rounded-3xl bg-slate-950 p-5 text-white shadow-xl sm:p-7 lg:p-8">
+        <div
+          className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full opacity-40 blur-3xl"
+          style={{ backgroundColor: theme.accent }}
+        />
+        <div className="pointer-events-none absolute -bottom-28 left-1/4 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_70%)]" />
 
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-blue-200">
-              <Sparkles size={13} />
-              {roleLabel}
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider"
+              style={{
+                borderColor: `${theme.accent}66`,
+                backgroundColor: `${theme.accent}1f`,
+                color: "#fff",
+              }}
+            >
+              <RoleIcon size={13} style={{ color: theme.from }} />
+              {theme.label} account
             </span>
 
             <h2 className="mt-4 text-2xl font-bold leading-tight sm:text-3xl">
@@ -129,7 +146,8 @@ export default async function DashboardPage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={isAdmin ? "/dashboard/admin/equipment" : "/equipment"}
-                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-blue-50"
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold transition hover:bg-slate-100"
+                style={{ color: theme.accent }}
               >
                 {isAdmin
                   ? "Review listings"
@@ -155,40 +173,98 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      {/* Admin numbers */}
-      {isAdmin && <AdminStats />}
+      {/* Analytics + charts */}
+      <DashboardAnalytics role={role} />
+
+      {/* Admin totals */}
+      {isAdmin && (
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                Marketplace totals
+              </h2>
+              <p className="text-xs text-slate-500">
+                Live counts across the whole platform.
+              </p>
+            </div>
+
+            <Link
+              href="/equipment"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            >
+              View marketplace
+              <ArrowRight size={13} />
+            </Link>
+          </div>
+
+          <AdminStats />
+        </section>
+      )}
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        {quickLinks.map(({ icon: Icon, title, description, href }) => (
-          <Link
-            key={title}
-            href={href}
-            className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
-              <Icon size={20} />
-            </span>
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+            Quick actions
+          </h2>
+          <p className="text-xs text-slate-500">
+            Jump straight into the things you do most.
+          </p>
+        </div>
 
-            <h3 className="mt-4 font-bold text-slate-900">{title}</h3>
-
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              {description}
-            </p>
-
-            <span className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-blue-600">
-              Continue
-              <ArrowRight
-                size={14}
-                className="transition group-hover:translate-x-0.5"
+        <div
+          className={cn(
+            "grid grid-cols-1 gap-4 sm:grid-cols-2",
+            quickLinks.length > 2 && "xl:grid-cols-3"
+          )}
+        >
+          {quickLinks.map(({ icon: Icon, title, description, href }) => (
+            <Link
+              key={title}
+              href={href}
+              className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+            >
+              <div
+                className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full opacity-0 blur-2xl transition group-hover:opacity-30"
+                style={{ backgroundColor: theme.accent }}
               />
-            </span>
-          </Link>
-        ))}
-      </div>
+
+              <span
+                className="relative flex h-11 w-11 items-center justify-center rounded-xl transition group-hover:scale-105"
+                style={{
+                  backgroundColor: `${theme.accent}14`,
+                  color: theme.accent,
+                }}
+              >
+                <Icon size={20} />
+              </span>
+
+              <h3 className="relative mt-4 font-bold text-slate-900 dark:text-white">
+                {title}
+              </h3>
+
+              <p className="relative mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                {description}
+              </p>
+
+              <span
+                className="relative mt-4 inline-flex items-center gap-1 text-xs font-semibold"
+                style={{ color: theme.accent }}
+              >
+                Continue
+                <ArrowRight
+                  size={14}
+                  className="transition group-hover:translate-x-0.5"
+                />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Security note */}
-      <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-500 shadow-sm">
+      <div className="flex items-start gap-3 rounded-2xl border border-slate-200/80 bg-white p-5 text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
         <ShieldCheck size={20} className="mt-0.5 shrink-0 text-emerald-600" />
         <p>
           Your account is secured with OnRent authentication. Sessions are
