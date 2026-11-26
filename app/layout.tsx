@@ -4,8 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "sonner"
 import { cn } from "@/lib/utils";
-import Navbar from "@/components/shared/Navbar";
-import Footer from "@/components/shared/Footer";
+import SiteChrome from "@/components/shared/SiteChrome";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'})
 
@@ -27,12 +26,9 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-           <Navbar />
-          {children}
-
-           <Footer />
-           <Toaster richColors position="top-center" />
-          </ThemeProvider>
+          <SiteChrome>{children}</SiteChrome>
+          <Toaster richColors position="top-center" />
+        </ThemeProvider>
       </body>
     </html>
   )
